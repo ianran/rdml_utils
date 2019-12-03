@@ -1,5 +1,5 @@
 import numpy as np
-import os, pdb, random, math, cmath, time, datetime
+import os, pdb, random, math, cmath, time, datetime, re
 from scipy.interpolate import RegularGridInterpolator, interp2d, griddata, RectBivariateSpline
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
@@ -8,6 +8,7 @@ from utils import dateLinspace, dateRange, getBox, getLatLon
 from roms import getROMSData, reshapeROMS
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
+import deepdish as dd
 
 class World(object):
 
