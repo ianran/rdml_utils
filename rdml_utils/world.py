@@ -15,15 +15,18 @@ class World(object):
   """docstring for World"""
   def __init__(self, sci_type, scalar_field, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
     self.science_variable_type = sci_type
+    
     self.scalar_field = scalar_field
+    
     self.current_u_field = current_u_field
     self.current_v_field = current_v_field
 
-    self.x_ticks = x_ticks # km
-    self.y_ticks = y_ticks # km
-    self.t_ticks = t_ticks # Time (s) since the world began
-    self.lon_ticks  = lon_ticks # Decimal Degrees
-    self.lat_ticks = lat_ticks # Decimal Degrees
+
+    self.x_ticks = x_ticks            # km
+    self.y_ticks = y_ticks            # km
+    self.t_ticks = t_ticks            # Time (s) since the world began
+    self.lon_ticks  = lon_ticks       # Decimal Degrees
+    self.lat_ticks = lat_ticks        # Decimal Degrees
     self.cell_y_size = cell_y_size
     self.cell_x_size = cell_x_size
 
@@ -235,7 +238,8 @@ class World(object):
     scalar_field = reshapeROMS(scalar_field, scalar_lat, scalar_lon, bounds, output_shape)
     current_u = reshapeROMS(current_u, u_lat, u_lon, bounds, output_shape)
     current_v = reshapeROMS(current_v, v_lat, v_lon, bounds, output_shape)
-    return cls(feature, scalar_field.data, current_u.data, current_v.data, x_ticks, y_ticks, roms_t, lon_ticks, lat_ticks, resolution[0], resolution[1], bounds)
+
+    return cls(feature, scalar_field, current_u, current_v, x_ticks, y_ticks, roms_t, lon_ticks, lat_ticks, resolution[0], resolution[1], bounds)
 
 
   @classmethod
@@ -393,12 +397,15 @@ def loadWorld(roms_file, world_center, world_width, world_height, world_resoluti
   
   if save_dir is not None:
     filename_pattern = re.compile('.*/(.*).nc')
-    world_file_name = "%s_lat_%.5f_lon_%.5f_width_%.3f_height_%.3f.h5" % (
+    world_file_name = "%s_lat_%.5f_lon_%.5f_width_%.3f_height_%.3f_resolution_%dm_%dm_%s.h5" % (
       re.findall(filename_pattern, roms_file)[0], 
       world_center.lat,
       world_center.lon,
       world_width,
-      world_height
+      world_height,
+      int(world_resolution[0] * 1000),
+      int(world_resolution[1] * 1000),
+      science_variable
       )
 
     world_file_full_path = os.path.expandvars(save_dir + world_file_name)

@@ -117,27 +117,43 @@ def loadTXLAROMSData(datafile_path, feature='temperature'):
 
 
 def reshapeROMS(roms_field, roms_lat, roms_lon, bounds, output_shape):
-  n_bound   = bounds[0]
-  s_bound   = bounds[1]
-  e_bound   = bounds[2]
-  w_bound   = bounds[3]
+  n_bound = bounds[0]
+  s_bound = bounds[1]
+  e_bound = bounds[2]
+  w_bound = bounds[3]
+
+  filtered_lon = roms_lon + -360*(roms_lon>180)
+  filtered_lat = roms_lat
+
+  if n_bound > np.nanmax(filtered_lat):
+    print "[Warning] North bound %.3f out of range of ROMS data (%.2f, %.2f)" % (n_bound, np.nanmin(filtered_lat), np.nanmax(filtered_lat))
+  if s_bound < np.nanmin(filtered_lat):
+    print "[Warning] South bound %.3f out of range of ROMS data (%.2f, %.2f)" % (s_bound, np.nanmin(filtered_lat), np.nanmax(filtered_lat))
+  if e_bound > np.nanmax(filtered_lon):
+    print "[Warning] East bound %.3f out of range of ROMS data (%.2f, %.2f)" % (e_bound, np.nanmin(filtered_lon), np.nanmax(filtered_lon))
+  if w_bound < np.nanmin(filtered_lon):
+    print "[Warning] West bound %.3f out of range of ROMS data (%.2f, %.2f)" % (w_bound, np.nanmin(filtered_lon), np.nanmax(filtered_lon))
+
 
   lonlon, latlat = np.mgrid[w_bound:e_bound:output_shape[0]*1j, s_bound:n_bound:output_shape[1]*1j]
 
-  if roms_lat.ndim == 1 and roms_lon.ndim == 1:
-    roms_lat, roms_lon = np.meshgrid(roms_lat, roms_lon)
+  if filtered_lat.ndim == 1 and filtered_lon.ndim == 1:
+    filtered_lat, filtered_lon = np.meshgrid(filtered_lat, filtered_lon)
 
-  lat_coords = roms_lat.flatten()
-  lon_coords = roms_lon.flatten()
+  lat_coords = filtered_lat.flatten()
+  lon_coords = filtered_lon.flatten()
 
   pts = np.vstack((lon_coords, lat_coords)).transpose()
   
   reshaped_field = np.empty(output_shape)
+  
   for t_idx in tqdm(range(output_shape[2])):
     data = roms_field[t_idx].data.flatten()
     zz = griddata(pts, data, (lonlon,latlat), fill_value=9999.)
     reshaped_field[:,:,t_idx] = zz
 
-  reshaped_field = np.ma.masked_greater(reshaped_field, 1.1*np.max(roms_field))
+  data_range = np.max(roms_field) - np.min(roms_field)
 
-  return reshaped_field
+  masked_field = np.ma.masked_less(np.ma.masked_greater(reshaped_field, np.max(roms_field) + .1*data_range), np.min(roms_field) - .1*data_range) 
+
+  return masked_field
