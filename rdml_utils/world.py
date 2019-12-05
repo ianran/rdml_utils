@@ -9,6 +9,9 @@ from roms import getROMSData, reshapeROMS
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import deepdish as dd
+import scipy.stats as stats
+
+
 
 class World(object):
 
@@ -16,7 +19,7 @@ class World(object):
   def __init__(self, sci_type, scalar_field, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
     self.science_variable_type = sci_type
     
-    self.scalar_field = scalar_field
+    self.scalar_field = scalar_field  # Shape (X_ticks, y_ticks, t_ticks)
     
     self.current_u_field = current_u_field
     self.current_v_field = current_v_field
@@ -206,6 +209,120 @@ class World(object):
   def getRandomLocationLatLon(self):
     return Location(xlon=random.choice(self.lon_ticks), ylat=random.choice(self.lat_ticks))
 
+  @classmethod
+  def donut(cls):
+    x, y = np.mgrid[-1:1:.01, -1:1:.01]
+    pos = np.empty(x.shape + (2,))
+    pos[:, :, 0] = x; pos[:, :, 1] = y
+    rv1 = stats.multivariate_normal([0, -0], [[.15, 0.0], [0.0, .15]])
+    m1 = rv1.pdf(pos)
+    m1 = m1 / np.max(m1)
+    rv2 = stats.multivariate_normal([0, -0], [[.05, 0.0], [0.0, .05]])
+    m2 = rv2.pdf(pos)
+    m2 = m2 / np.max(m2)
+    scalar_field = m1 - m2
+    scalar_field = np.expand_dims(scalar_field / np.sum(scalar_field), 2)
+
+    x_ticks = np.arange(0, scalar_field.shape[0])
+    y_ticks = np.arange(0, scalar_field.shape[1])
+    t_ticks = np.arange(0, scalar_field.shape[2])
+
+    u_field = np.zeros(scalar_field.shape)
+    v_field = np.zeros(scalar_field.shape)
+
+    lat_ticks = y_ticks
+    lon_ticks = x_ticks
+
+    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
+
+    resolution = 1.0
+
+    return cls('temperature', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
+
+  @classmethod
+  def tripleDonut(cls):
+    x, y = np.mgrid[-1:1:.01, -1:1:.01]
+    pos = np.empty(x.shape + (2,))
+    pos[:, :, 0] = x
+    pos[:, :, 1] = y
+
+
+    locs = [Location(-.25, -.25), Location(-.25, .25), Location(.25, 0)]
+    scales = [0.5, 0.5, 0.5]
+
+    scalar_field = np.zeros((pos.shape[0], pos.shape[1]))
+
+    for loc, scale in zip(locs, scales):
+      rv1 = stats.multivariate_normal([loc.x, loc.y], [[.15*scale, 0.0], [0.0, .15*scale]])
+      m1 = rv1.pdf(pos)
+      m1 = m1 / np.max(m1)
+      rv2 = stats.multivariate_normal([loc.x, loc.y], [[.05*scale, 0.0], [0.0, .05*scale]])
+      m2 = rv2.pdf(pos)
+      m2 = m2 / np.max(m2)
+      res = m1 - m2
+      res = res / np.sum(res)
+      scalar_field = np.maximum(scalar_field, res)
+
+    scalar_field = np.expand_dims(scalar_field, 2)
+
+    x_ticks = np.arange(0, scalar_field.shape[0])
+    y_ticks = np.arange(0, scalar_field.shape[1])
+    t_ticks = np.arange(0, scalar_field.shape[2])
+
+    u_field = np.zeros(scalar_field.shape)
+    v_field = np.zeros(scalar_field.shape)
+
+    lat_ticks = y_ticks
+    lon_ticks = x_ticks
+
+    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
+
+    resolution = 1.0
+
+    return cls('temperature', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
+
+  @classmethod
+  def randomDonut(cls, n_donuts):
+    x, y = np.mgrid[-1:1:.01, -1:1:.01]
+    pos = np.empty(x.shape + (2,))
+    pos[:, :, 0] = x
+    pos[:, :, 1] = y
+
+
+    scalar_field = np.zeros((pos.shape[0], pos.shape[1]))
+    for ii in range(n_donuts):
+      center_loc = Location(random.random() * 2. - 1., random.random() * 2. - 1.)
+      outer_radius = random.random() / 2. + 0.3
+      inner_radius = random.random() * outer_radius
+
+
+      rv1 = stats.multivariate_normal([center_loc.x, center_loc.y], [[.15*outer_radius, 0.0], [0.0, .15*outer_radius]])
+      m1 = rv1.pdf(pos)
+      m1 = m1 / np.max(m1)
+      rv2 = stats.multivariate_normal([center_loc.x, center_loc.y], [[.15*inner_radius, 0.0], [0.0, .15*inner_radius]])
+      m2 = rv2.pdf(pos)
+      m2 = m2 / np.max(m2)
+      res = m1 - m2
+      res = res / np.sum(res)
+      scalar_field = np.maximum(scalar_field, res)
+
+    scalar_field = np.expand_dims(scalar_field, 2)
+
+    x_ticks = np.arange(0, scalar_field.shape[0])
+    y_ticks = np.arange(0, scalar_field.shape[1])
+    t_ticks = np.arange(0, scalar_field.shape[2])
+
+    u_field = np.zeros(scalar_field.shape)
+    v_field = np.zeros(scalar_field.shape)
+
+    lat_ticks = y_ticks
+    lon_ticks = x_ticks
+
+    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
+
+    resolution = 1.0
+
+    return cls('temperature', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
 
 
   @classmethod
