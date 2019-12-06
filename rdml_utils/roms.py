@@ -34,25 +34,31 @@ def loadOregonROMSData(datafile_path, feature="temperature"):
   roms_dataset = nc.Dataset(datafile_path)
 
   base_time = datetime.datetime.strptime(str(roms_dataset['ocean_time'].units), "seconds since %Y-%m-%d %H:%M:%S")
-  times = np.array([(base_time - datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=int(dt))).total_seconds() for dt in roms_dataset['ocean_time'][:]]) 
+  times = np.array([(base_time - datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=int(dt))).total_seconds() for dt in roms_dataset['ocean_time'][:]])
 
   if feature == 'temp' or feature == 'temperature':
     scalar_field = roms_dataset['temp'][:,-1,:,:] # I'm pretty the depth variable goes bottom -> surface which is different than other roms datasets
     lat = roms_dataset['lat_rho'][:]
     lon = roms_dataset['lon_rho'][:]
 
+  if feature == 'h' or feature == 'depth':
+    lat = roms_dataset['lat_rho'][:]
+    lon = roms_dataset['lon_rho'][:]
+    scalar_field = roms_dataset['h'][:]
+    scalar_field = np.repeat(scalar_field[np.newaxis,:,:], roms_dataset['temp'].shape[0], axis=0)
+
   elif feature == 'current_u' or feature == "u":
-    scalar_field = roms_dataset['u'][:,-1,:,:]   
+    scalar_field = roms_dataset['u'][:,-1,:,:]
     lat = roms_dataset['lat_u'][:]
     lon = roms_dataset['lon_u'][:]
 
   elif feature == 'current_v' or feature == "v":
-    scalar_field = roms_dataset['v'][:,-1,:,:]  
+    scalar_field = roms_dataset['v'][:,-1,:,:]
     lat = roms_dataset['lat_v'][:]
     lon = roms_dataset['lon_v'][:]
 
   elif feature == 'salinity' or feature == "salt":
-    scalar_field = roms_dataset['salt'][:,-1,:,:]  
+    scalar_field = roms_dataset['salt'][:,-1,:,:]
     lat = roms_dataset['lat_rho'][:]
     lon = roms_dataset['lon_rho'][:]
 
@@ -63,10 +69,16 @@ def loadOregonROMSData(datafile_path, feature="temperature"):
 
 def loadMontereyROMSData(datafile_path, feature="temperature"):
   roms_dataset = nc.Dataset(datafile_path)
-  
+
   #Convert dumb time units into UTC Timestamp
   base_time = datetime.datetime.strptime(str(roms_dataset['time'].units), "hour since %Y-%m-%d %H:%M:%S")
-  times = np.array([(base_time - datetime.datetime(1970, 1, 1) + datetime.timedelta(hours=int(dt))).total_seconds() for dt in roms_dataset['time'][:]]) 
+  times = np.array([(base_time - datetime.datetime(1970, 1, 1) + datetime.timedelta(hours=int(dt))).total_seconds() for dt in roms_dataset['time'][:]])
+
+  if feature == 'h' or feature == 'depth':
+    lat = roms_dataset['lat_rho'][:]
+    lon = roms_dataset['lon_rho'][:]
+    scalar_field = roms_dataset['h'][:]
+    scalar_field = np.repeat(scalar_field[np.newaxis,:,:], roms_dataset['temp'].shape[0], axis=0)
 
   if feature == "temp" or feature == "temperature":
     scalar_field = roms_dataset['temp'][:,0,:,:]
@@ -95,6 +107,12 @@ def loadTXLAROMSData(datafile_path, feature='temperature'):
     times = roms_dataset['ocean_time'][:]
     scalar_field = roms_dataset['temp'][:,0,:,:]
 
+  if feature == 'h' or feature == 'depth':
+    lat = roms_dataset['lat_rho'][:]
+    lon = roms_dataset['lon_rho'][:]
+    scalar_field = roms_dataset['h'][:]
+    scalar_field = np.repeat(scalar_field[np.newaxis,:,:], roms_dataset['temp'].shape[0], axis=0)
+
   elif feature == 'salt' or feature == 'salinity':
     lat = roms_dataset['lat_rho'][:]
     lon = roms_dataset['lon_rho'][:]
@@ -105,13 +123,13 @@ def loadTXLAROMSData(datafile_path, feature='temperature'):
     lat = roms_dataset['lat_u'][:]
     lon = roms_dataset['lon_u'][:]
     times = roms_dataset['ocean_time'][:]
-    scalar_field = roms_dataset['u'][:,0,:,:]   
+    scalar_field = roms_dataset['u'][:,0,:,:]
 
   elif feature == 'current_v' or feature == "v":
     lat = roms_dataset['lat_v'][:]
     lon = roms_dataset['lon_v'][:]
     times = roms_dataset['ocean_time'][:]
-    scalar_field = roms_dataset['v'][:,0,:,:]  
+    scalar_field = roms_dataset['v'][:,0,:,:]
 
   return scalar_field, lat, lon, times
 
@@ -144,9 +162,9 @@ def reshapeROMS(roms_field, roms_lat, roms_lon, bounds, output_shape):
   lon_coords = filtered_lon.flatten()
 
   pts = np.vstack((lon_coords, lat_coords)).transpose()
-  
+
   reshaped_field = np.empty(output_shape)
-  
+
   for t_idx in tqdm(range(output_shape[2])):
     data = roms_field[t_idx].data.flatten()
     zz = griddata(pts, data, (lonlon,latlat), fill_value=9999.)
@@ -154,6 +172,6 @@ def reshapeROMS(roms_field, roms_lat, roms_lon, bounds, output_shape):
 
   data_range = np.max(roms_field) - np.min(roms_field)
 
-  masked_field = np.ma.masked_less(np.ma.masked_greater(reshaped_field, np.max(roms_field) + .1*data_range), np.min(roms_field) - .1*data_range) 
+  masked_field = np.ma.masked_less(np.ma.masked_greater(reshaped_field, np.max(roms_field) + .1*data_range), np.min(roms_field) - .1*data_range)
 
   return masked_field
