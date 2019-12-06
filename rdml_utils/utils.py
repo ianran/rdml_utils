@@ -643,7 +643,11 @@ def mkdirP(path):
       raise
 
 
-
+def dateRange(d1, d2, step):
+  curr = d1
+  while curr < d2:
+    yield curr
+    curr += step
 
 
 

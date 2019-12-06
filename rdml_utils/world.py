@@ -25,11 +25,11 @@ class World(object):
     self.current_v_field = current_v_field
 
 
-    self.x_ticks = x_ticks            # km
-    self.y_ticks = y_ticks            # km
-    self.t_ticks = t_ticks            # Time (s) since the world began
-    self.lon_ticks  = lon_ticks       # Decimal Degrees
-    self.lat_ticks = lat_ticks        # Decimal Degrees
+    self.x_ticks = x_ticks                          # km
+    self.y_ticks = y_ticks                          # km
+    self.t_ticks = t_ticks                          # UTC
+    self.lon_ticks  = lon_ticks                     # Decimal Degrees
+    self.lat_ticks = lat_ticks                      # Decimal Degrees
     self.cell_y_size = cell_y_size
     self.cell_x_size = cell_x_size
 
