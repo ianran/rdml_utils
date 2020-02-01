@@ -7,3 +7,5 @@ from .obstacle import Obstacle, DynamicObstacle, loadObstacles
 from .transform import CoordTransformer
 from .geofence import Geofence
 from .utils import *
+from .h_signature import HSignature
+from .homotopy_augmented_graph import HomotopyAugmentedGraph

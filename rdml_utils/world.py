@@ -326,6 +326,92 @@ class World(object):
 
 
   @classmethod
+  def randomHotspots(cls):
+    x, y = np.mgrid[-1:1:.01, -1:1:.01]
+    pos = np.empty(x.shape + (2,))
+    pos[:, :, 0] = x
+    pos[:, :, 1] = y
+
+
+    scalar_field = np.zeros((pos.shape[0], pos.shape[1]))
+    for ii in range(100):
+      center_loc = Location(random.random() * 2. - 1., random.random() * 2. - 1.)
+      radius = random.random() 
+
+      rv1 = stats.multivariate_normal([center_loc.x, center_loc.y], [[.05*radius, 0.0], [0.0, .05*radius]])
+      m1 = rv1.pdf(pos)
+      m1 = m1 / np.max(m1)
+      
+      scalar_field = scalar_field + m1
+
+    scalar_field = scalar_field / np.max(scalar_field)
+
+
+    scalar_field = np.expand_dims(scalar_field, 2)
+
+    x_ticks = np.arange(0, scalar_field.shape[0])
+    y_ticks = np.arange(0, scalar_field.shape[1])
+    t_ticks = np.arange(0, scalar_field.shape[2])
+
+    u_field = np.zeros(scalar_field.shape)
+    v_field = np.zeros(scalar_field.shape)
+
+    lat_ticks = y_ticks
+    lon_ticks = x_ticks
+
+    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
+
+    resolution = 1.0
+
+    return cls('temperature', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
+
+
+  @classmethod
+  def gyre(cls):
+    # x = np.linspace(0, 2*math.pi, 100)
+    # y = np.linspace(math.pi, 3*math.pi, 100)
+
+
+    x = np.arange(0, 2*math.pi, 0.01)
+    y = np.arange(math.pi, 3*math.pi, 0.01)
+
+    xx, yy = np.meshgrid(x, y)
+    xx = xx + math.pi /2
+
+
+    u_field = np.sin(yy) * np.sin(xx)
+    v_field = np.sin(xx + math.pi/2) * np.sin(yy + math.pi/2)
+
+    scalar_field = np.sqrt(u_field*u_field + v_field*v_field)
+    scalar_field = scalar_field / np.max(scalar_field)
+   
+    # pdb.set_trace()
+
+    # scalar_field = np.expand_dims(scalar_field, 2)
+    scalar_field = np.dstack((scalar_field, scalar_field, scalar_field))
+    u_field = np.dstack((u_field, u_field, u_field))
+    v_field = np.dstack((v_field, v_field, v_field))
+
+    # u_field = np.expand_dims(u_field, 2)
+    # v_field = np.expand_dims(v_field, 2)
+
+    x_ticks = np.arange(0, scalar_field.shape[0])
+    y_ticks = np.arange(0, scalar_field.shape[1])
+    t_ticks = np.arange(0, scalar_field.shape[2])
+
+    lat_ticks = y_ticks
+    lon_ticks = x_ticks
+
+    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
+
+    resolution = 1.0
+
+    return cls('Current Velocity', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
+
+
+
+
+  @classmethod
   def roms(cls, datafile_path, xlen, ylen, center, feature='temperature', resolution=(0.1, 0.1)):
 
     # World bounds

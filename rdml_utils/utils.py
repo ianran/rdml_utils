@@ -4,7 +4,7 @@ import scipy.ndimage as ndimage
 import numpy as np
 
 from shapely.geometry import Point, Polygon, LineString
-
+from Queue import Queue
 import math, operator, datetime, pdb, haversine, os, errno
 
 import matplotlib.pyplot as plt
@@ -23,6 +23,42 @@ from location import Location, Observation, StampedLocation
 class EndOfSimException(Exception):
   pass
   
+
+class QueueSet(object):
+  """docstring for QueueSet"""
+  def __init__(self):
+    self.queue = Queue()
+    self.queue_set = []
+
+  def __len__(self):
+    return len(self.queue_set)
+
+  def qsize(self):
+    return self.queue.qsize()
+
+  def push(self, item):
+    if item not in self.queue_set:
+      self.queue.put(item)
+      self.queue_set.append(item)
+      return True
+    else:
+      return False
+
+  def pop(self):
+    try:
+      item = self.queue.get_nowait()
+    except Queue.Empty:
+      return None
+
+    self.queue_set.remove(item)
+    return item
+
+  def hasElement(self, query):
+    return query in self.queue_set
+
+  def empty(self):
+    return self.queue.empty()
+
 
 ####################################
 ## Utility Functions
@@ -651,6 +687,49 @@ def dateRange(d1, d2, step):
 
 
 
+def samplePoints(matrix, n_pts):
+  height, width = matrix.shape[:2]
+  valid_pts = [pt for pt in itertools.product(range(width), range(height)) if matrix[pt[1], pt[0]] != 0]
+  return random.sample(valid_pts, n_pts)
+
+
+def hSigEqual(h1, h2):
+  if len(h1) == len(h2):
+    if all([x == y for (x,y) in zip(h1, h2)]):
+      return True
+  return False
+
+
+def rayIntersection(line_segment, ray_origin):
+  ray_direction = np.array([0, 1])
+  ray_origin = ray_origin.npArray()
+  point1 = line_segment[0].npArray()
+  point2 = line_segment[1].npArray()
+
+
+  v1 = ray_origin - point1
+  v2 = point2 - point1
+  v3 = np.array([-ray_direction[1], ray_direction[0]])
+
+  if np.dot(v2, v3) == 0:
+    return False
+
+  t1 = np.cross(v2, v1) / np.dot(v2, v3)
+  t2 = np.dot(v1, v3) / np.dot(v2, v3)
+
+  return t1 >= 0.0 and t2 >= 0.0 and t2 <= 1.0
+
+
+def findPtInContour(contour, height, width, res):
+  while True:
+    pt = [random.randint(0, width), random.randint(0, height)]
+    if cv2.pointPolygonTest(contour, tuple(pt), False) != -1:
+      for sample in res:
+        if pt[0] == sample[0] or pt[1] == sample[1]:
+          break
+      else:
+        pt[0] = pt[0] + .5
+        return tuple(pt)
 
 if __name__ == '__main__':
   p1 = Location(0, 0)
