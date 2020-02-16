@@ -11,10 +11,10 @@ class Location(object):
       raise ValueError("Invalid value for ylat: Received %s Expected Number" % str(type(ylat)))
     if not isinstance(xlon, numbers.Number):
       raise ValueError("Invalid value for xlon: Received %s Expected Number" % str(type(xlon)))
-    self.lon = xlon
-    self.lat = ylat
-    self.x = xlon
-    self.y = ylat
+    self.lon = float(xlon)
+    self.lat = float(ylat)
+    self.x = float(xlon)
+    self.y = float(ylat)
 
   def __str__(self):
     return "xLon: %.5f, yLat: %.5f" % (self.lon, self.lat)
@@ -86,8 +86,8 @@ class LocDelta(object):
     if not isinstance(d_xlon, numbers.Number):
       raise ValueError("Invalid value for d_xlon: Received %s Expected Number" % str(type(d_xlon)))
 
-    self.d_ylat = d_ylat
-    self.d_xlon = d_xlon
+    self.d_ylat = float(d_ylat)
+    self.d_xlon = float(d_xlon)
 
   @classmethod
   def fromPolar(cls, r, theta, angle_units="radians"):
