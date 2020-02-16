@@ -15,6 +15,9 @@ class Geofence(object):
     self.fence = pth.Path(np.vstack([hull, hull[0]]))
 
 
+  def __str__(self):
+    return "Geofence\n\t" + "\n\t".join(str(pt) for pt in self.pts)
+
   @classmethod
   def fromPts(cls, pts):
     return cls(pts)
@@ -58,3 +61,6 @@ class Geofence(object):
       return True
     else:
       return self.fence.contains_point([lon, lat])
+
+  def draw(self, ax, color):
+    ax.plot([pt.x for pt in self.pts + [self.pts[0]]], [pt.y for pt in self.pts + [self.pts[0]]], c=color)

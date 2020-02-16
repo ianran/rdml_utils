@@ -1,15 +1,18 @@
-import numpy as np
 import os, pdb, random, math, cmath, time, datetime, re
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as tick
+import deepdish as dd
+import scipy.stats as stats
+
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import RegularGridInterpolator, interp2d, griddata, RectBivariateSpline
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
 from location import Location, Observation, LocDelta
 from utils import dateLinspace, dateRange, getBox, getLatLon
 from roms import getROMSData, reshapeROMS
-import matplotlib.pyplot as plt
-import matplotlib.ticker as tick
-import deepdish as dd
-import scipy.stats as stats
 
 
 
@@ -18,9 +21,13 @@ class World(object):
   """docstring for World"""
   def __init__(self, sci_type, scalar_field, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
     self.science_variable_type = sci_type
-    
-    self.scalar_field = scalar_field  # Shape (X_ticks, y_ticks, t_ticks)
-    
+    self.scalar_field = scalar_field.data  # Shape (X_ticks, y_ticks, t_ticks)
+
+    if scalar_field.mask == False:
+      self.obstacle_field = np.zeros(self.scalar_field.shape)
+    else:
+      self.obstacle_field = scalar_field.mask  # Shape (X_ticks, y_ticks, t_ticks) 0 = Not obstacle pixel, 1 = obstacle pixel
+
     self.current_u_field = current_u_field
     self.current_v_field = current_v_field
 
@@ -47,6 +54,27 @@ class World(object):
 
   def __repr__(self):
     return "World Class Object"
+
+
+  def isObstacle(self, query_loc, loc_type='xy'):
+    if not self.withinBounds(query_loc, loc_type):
+      return True
+
+    elif loc_type == 'xy':
+      x_dists = [abs(query_loc.x - pt_x) for pt_x in self.x_ticks]
+      y_dists = [abs(query_loc.y - pt_y) for pt_y in self.y_ticks]
+      
+      pt_x_idx = np.argmin(x_dists)
+      pt_y_idx = np.argmin(y_dists)
+      return self.obstacle_field[pt_x_idx, pt_y_idx, 0]
+
+    elif loc_type == 'latlon':
+      lon_dists = [abs(query_loc.lon - pt_lon) for pt_lon in self.lon_ticks]
+      lat_dists = [abs(query_loc.lat - pt_lat) for pt_lat in self.lat_ticks]
+      
+      pt_lon_idx = np.argmin(lon_dists)
+      pt_lat_idx = np.argmin(lat_dists)
+      return self.obstacle_field[pt_lon_idx, pt_lat_idx, 0]
 
 
   def xy2latlon(self, query_xy):
@@ -103,32 +131,66 @@ class World(object):
   def makeObservations(self, query_locs, query_times, query_type='sci', loc_type='xy'):
     query_times = [min(time, self.t_ticks[-1]) for time in query_times]
 
-    if loc_type == "xy":
-      if query_type == 'sci':
-        sci_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks, self.t_ticks), self.scalar_field, fill_value=float('NaN'), bounds_error=False)
-        return [Observation(query_loc, float(sci_interp((query_loc.x, query_loc.y, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+    if len(self.t_ticks) > 1:
+      if loc_type == "xy":
+        if query_type == 'sci':
+          sci_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks, self.t_ticks), self.scalar_field, fill_value=float('NaN'), bounds_error=False)
+          return [Observation(query_loc, float(sci_interp((query_loc.x, query_loc.y, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
 
-      elif query_type == 'current':
-        u_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks, self.t_ticks), self.current_u_field, fill_value=float('NaN'), bounds_error=False)
-        v_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks, self.t_ticks), self.current_v_field, fill_value=float('NaN'), bounds_error=False)
+        elif query_type == 'current':
+          u_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks, self.t_ticks), self.current_u_field, fill_value=float('NaN'), bounds_error=False)
+          v_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks, self.t_ticks), self.current_v_field, fill_value=float('NaN'), bounds_error=False)
 
-        u_obs = [Observation(query_loc, float(u_interp((query_loc.x, query_loc.y, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
-        v_obs = [Observation(query_loc, float(v_interp((query_loc.x, query_loc.y, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+          u_obs = [Observation(query_loc, float(u_interp((query_loc.x, query_loc.y, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+          v_obs = [Observation(query_loc, float(v_interp((query_loc.x, query_loc.y, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
 
-        return u_obs, v_obs
-    elif loc_type == "latlon":
-      if query_type == 'sci':
-        sci_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks, self.t_ticks), self.scalar_field, fill_value=float('NaN'), bounds_error=False)
-        return [Observation(query_loc, float(sci_interp((query_loc.lon, query_loc.lat, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+          return u_obs, v_obs
 
-      elif query_type == 'current':
-        u_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks, self.t_ticks), self.current_u_field, fill_value=float('NaN'), bounds_error=False)
-        v_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks, self.t_ticks), self.current_v_field, fill_value=float('NaN'), bounds_error=False)
 
-        u_obs = [Observation(query_loc, float(u_interp((query_loc.lon, query_loc.lat, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
-        v_obs = [Observation(query_loc, float(v_interp((query_loc.lon, query_loc.lat, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+      elif loc_type == "latlon":
+        if query_type == 'sci':
+          sci_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks, self.t_ticks), self.scalar_field, fill_value=float('NaN'), bounds_error=False)
+          return [Observation(query_loc, float(sci_interp((query_loc.lon, query_loc.lat, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
 
-        return u_obs, v_obs
+        elif query_type == 'current':
+          u_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks, self.t_ticks), self.current_u_field, fill_value=float('NaN'), bounds_error=False)
+          v_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks, self.t_ticks), self.current_v_field, fill_value=float('NaN'), bounds_error=False)
+
+          u_obs = [Observation(query_loc, float(u_interp((query_loc.lon, query_loc.lat, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+          v_obs = [Observation(query_loc, float(v_interp((query_loc.lon, query_loc.lat, query_time))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+
+          return u_obs, v_obs
+    
+
+    else:
+      if loc_type == "xy":
+        if query_type == 'sci':
+          sci_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks), self.scalar_field[:,:,0], fill_value=float('NaN'), bounds_error=False)
+          return [Observation(query_loc, float(sci_interp((query_loc.x, query_loc.y))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+
+        elif query_type == 'current':
+          u_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks), self.current_u_field[:,:,0], fill_value=float('NaN'), bounds_error=False)
+          v_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks), self.current_v_field[:,:,0], fill_value=float('NaN'), bounds_error=False)
+
+          u_obs = [Observation(query_loc, float(u_interp((query_loc.x, query_loc.y))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+          v_obs = [Observation(query_loc, float(v_interp((query_loc.x, query_loc.y))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+
+          return u_obs, v_obs
+
+
+      elif loc_type == "latlon":
+        if query_type == 'sci':
+          sci_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks), self.scalar_field[:,:,0], fill_value=float('NaN'), bounds_error=False)
+          return [Observation(query_loc, float(sci_interp((query_loc.lon, query_loc.lat))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+
+        elif query_type == 'current':
+          u_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks), self.current_u_field[:,:,0], fill_value=float('NaN'), bounds_error=False)
+          v_interp = RegularGridInterpolator((self.lon_ticks, self.lat_ticks), self.current_v_field[:,:,0], fill_value=float('NaN'), bounds_error=False)
+
+          u_obs = [Observation(query_loc, float(u_interp((query_loc.lon, query_loc.lat))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+          v_obs = [Observation(query_loc, float(v_interp((query_loc.lon, query_loc.lat))), query_time) for query_loc, query_time in zip(query_locs, query_times) if self.withinBounds(query_loc, loc_type=loc_type)]
+
+          return u_obs, v_obs
 
   def getSnapshot(self, ss_time, snapshot_type='scalar_field'):
     time_dist = [abs(ss_time - x) for x in self.t_ticks]#
@@ -136,6 +198,9 @@ class World(object):
 
     if snapshot_type == 'scalar_field':
       return self.scalar_field[:,:,snapshot_time_idx]
+
+    if snapshot_type == 'obstacle_field':
+      return self.obstacle_field[:,:,snapshot_time_idx]
 
     elif snapshot_type == 'current_u_field':
       return self.current_u_field[:,:,snapshot_time_idx]
@@ -164,39 +229,49 @@ class World(object):
     return LocDelta(d_xlon = float(current_u_current), d_ylat = float(current_v_current))
 
 
-  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=7, snapshot_time=None, draw_currents=True, cmap='Greys'):
+  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black'):
+
 
     if snapshot_time is None:
       ss_scalar_field = self.getSnapshot(self.t_ticks[0], 'scalar_field')
+      ss_obstacle_field = self.getSnapshot(self.t_ticks[0], 'obstacle_field')
       ss_current_u_field = self.getSnapshot(self.t_ticks[0], 'current_u_field')
       ss_current_v_field = self.getSnapshot(self.t_ticks[0], 'current_v_field')
     else:
       ss_scalar_field = self.getSnapshot(snapshot_time, 'scalar_field')
+      ss_obstacle_field = self.getSnapshot(snapshot_time, 'obstacle_field')
       ss_current_u_field = self.getSnapshot(snapshot_time, 'current_u_field')
       ss_current_v_field = self.getSnapshot(snapshot_time, 'current_v_field')
 
+
+    masked_field = np.ma.MaskedArray(data=ss_scalar_field, mask=ss_obstacle_field)
+
     if cbar_min is None:
-      cbar_min = np.min(ss_scalar_field)
+      cbar_min = np.min(masked_field)
     if cbar_max is None:
-      cbar_max = np.max(ss_scalar_field)
+      cbar_max = np.max(masked_field)
 
     num_format  = '%.0f'
     formatter = tick.FormatStrFormatter(num_format)
 
-    CS = plt.pcolor(self.x_ticks, self.y_ticks, ss_scalar_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
+    CS = plt.pcolor(self.x_ticks, self.y_ticks, masked_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
 
     if draw_currents:
-      quiver = plt.quiver(self.x_ticks[::quiver_stride], self.y_ticks[::quiver_stride], ss_current_u_field.transpose()[::quiver_stride, ::quiver_stride], ss_current_v_field.transpose()[::quiver_stride, ::quiver_stride])
+      if quiver_stride is None:
+        quiver_stride = len(self.x_ticks) / 20
+      quiver = plt.quiver(self.x_ticks[::quiver_stride], self.y_ticks[::quiver_stride], ss_current_u_field.transpose()[::quiver_stride, ::quiver_stride], ss_current_v_field.transpose()[::quiver_stride, ::quiver_stride], color=quiver_color)
       quiver_key = plt.quiverkey(quiver, 0.95, 1.05, 0.2, "0.2 m/s", labelpos='E', coordinates='axes')
 
     ax.get_xaxis().set_major_formatter(formatter)
     ax.get_yaxis().set_major_formatter(formatter)
     plt.ylim([np.min(self.x_ticks), np.max(self.x_ticks)])
     plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)]) 
-    cbar = plt.colorbar(CS, format='%.1f')
     plt.title("Ground Truth World")
     plt.xlabel("X (km)")
     plt.ylabel("Y (km)") 
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = plt.colorbar(CS, format='%.1f', cax=cax)
     cbar.set_label(self.science_variable_type)
     ax.axis('scaled')
 
@@ -326,22 +401,41 @@ class World(object):
 
 
   @classmethod
-  def randomHotspots(cls):
-    x, y = np.mgrid[-1:1:.01, -1:1:.01]
-    pos = np.empty(x.shape + (2,))
-    pos[:, :, 0] = x
-    pos[:, :, 1] = y
+  def randomHotspots(cls, world_center, world_width, world_height, world_resolution, science_variable):
+    bounds = getBox(xlen=world_width, ylen=world_height, center=world_center)
+
+    n_bound   = bounds[0]
+    s_bound   = bounds[1]
+    e_bound   = bounds[2]
+    w_bound   = bounds[3]
+
+    x_ticks   = np.arange(0.0, world_width+world_resolution[0], world_resolution[0])
+    y_ticks   = np.arange(0.0, world_height+world_resolution[1], world_resolution[1])
+
+    x_ticks = x_ticks - np.max(x_ticks)/2.
+    y_ticks = y_ticks - np.max(y_ticks)/2.
+
+    lon_ticks = np.linspace(w_bound, e_bound, len(x_ticks))
+    lat_ticks = np.linspace(s_bound, n_bound, len(y_ticks))
+
+    scalar_field = np.zeros((len(x_ticks), len(y_ticks)))
+
+    # x, y = np.mgrid[-1:1:.01, -1:1:.01]
+    xx, yy = np.meshgrid(x_ticks, y_ticks)
+    pos = np.empty(xx.shape + (2,))
+    pos[:, :, 0] = xx
+    pos[:, :, 1] = yy
 
 
-    scalar_field = np.zeros((pos.shape[0], pos.shape[1]))
     for ii in range(100):
-      center_loc = Location(random.random() * 2. - 1., random.random() * 2. - 1.)
-      radius = random.random() 
+      center_loc = Location(xlon=min(x_ticks) + random.random()*(max(x_ticks) - min(x_ticks)),
+                            ylat=min(y_ticks) + random.random()*(max(y_ticks) - min(y_ticks)))
+      radius = random.random()  * len(x_ticks) / 2.
 
-      rv1 = stats.multivariate_normal([center_loc.x, center_loc.y], [[.05*radius, 0.0], [0.0, .05*radius]])
+      rv1 = stats.multivariate_normal([center_loc.x, center_loc.y], [[radius, 0.0], [0.0, radius]])
       m1 = rv1.pdf(pos)
       m1 = m1 / np.max(m1)
-      
+
       scalar_field = scalar_field + m1
 
     scalar_field = scalar_field / np.max(scalar_field)
@@ -349,35 +443,45 @@ class World(object):
 
     scalar_field = np.expand_dims(scalar_field, 2)
 
-    x_ticks = np.arange(0, scalar_field.shape[0])
-    y_ticks = np.arange(0, scalar_field.shape[1])
     t_ticks = np.arange(0, scalar_field.shape[2])
 
     u_field = np.zeros(scalar_field.shape)
     v_field = np.zeros(scalar_field.shape)
 
-    lat_ticks = y_ticks
-    lon_ticks = x_ticks
+    scalar_field = np.ma.masked_greater(scalar_field, float('inf'))
+    u_field = np.ma.masked_greater(u_field, float('inf'))
+    v_field = np.ma.masked_greater(v_field, float('inf'))
 
-    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
-
-    resolution = 1.0
-
-    return cls('temperature', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
+    return cls('temperature', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
 
 
   @classmethod
-  def gyre(cls):
-    # x = np.linspace(0, 2*math.pi, 100)
-    # y = np.linspace(math.pi, 3*math.pi, 100)
+  def gyre(cls, world_center, world_width, world_height, world_resolution, science_variable):
 
 
-    x = np.arange(0, 2*math.pi, 0.01)
-    y = np.arange(math.pi, 3*math.pi, 0.01)
+    bounds = getBox(xlen=world_width, ylen=world_height, center=world_center)
 
-    xx, yy = np.meshgrid(x, y)
+    n_bound   = bounds[0]
+    s_bound   = bounds[1]
+    e_bound   = bounds[2]
+    w_bound   = bounds[3]
+
+    x_ticks   = np.arange(0.0, world_width+world_resolution[0], world_resolution[0])
+    y_ticks   = np.arange(0.0, world_height+world_resolution[1], world_resolution[1])
+
+    x_ticks = x_ticks - np.max(x_ticks)/2.
+    y_ticks = y_ticks - np.max(y_ticks)/2.
+
+    lon_ticks = np.linspace(w_bound, e_bound, len(x_ticks))
+    lat_ticks = np.linspace(s_bound, n_bound, len(y_ticks))
+
+
+    generator_x = np.linspace(0, 2*math.pi, len(x_ticks))
+    generator_y = np.linspace(math.pi, 3*math.pi, len(y_ticks))
+
+
+    xx, yy = np.meshgrid(generator_x, generator_y)
     xx = xx + math.pi /2
-
 
     u_field = np.sin(yy) * np.sin(xx)
     v_field = np.sin(xx + math.pi/2) * np.sin(yy + math.pi/2)
@@ -385,28 +489,17 @@ class World(object):
     scalar_field = np.sqrt(u_field*u_field + v_field*v_field)
     scalar_field = scalar_field / np.max(scalar_field)
    
-    # pdb.set_trace()
+    scalar_field = np.expand_dims(scalar_field, 2)
+    u_field = np.expand_dims(u_field, 2)
+    v_field = np.expand_dims(v_field, 2)
 
-    # scalar_field = np.expand_dims(scalar_field, 2)
-    scalar_field = np.dstack((scalar_field, scalar_field, scalar_field))
-    u_field = np.dstack((u_field, u_field, u_field))
-    v_field = np.dstack((v_field, v_field, v_field))
-
-    # u_field = np.expand_dims(u_field, 2)
-    # v_field = np.expand_dims(v_field, 2)
-
-    x_ticks = np.arange(0, scalar_field.shape[0])
-    y_ticks = np.arange(0, scalar_field.shape[1])
     t_ticks = np.arange(0, scalar_field.shape[2])
 
-    lat_ticks = y_ticks
-    lon_ticks = x_ticks
+    scalar_field = np.ma.masked_greater(scalar_field, float('inf'))
+    u_field = np.ma.masked_greater(u_field, float('inf'))
+    v_field = np.ma.masked_greater(v_field, float('inf'))
 
-    bounds = [np.max(y_ticks), np.min(y_ticks), np.max(x_ticks), np.min(y_ticks)]
-
-    resolution = 1.0
-
-    return cls('Current Velocity', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, resolution, resolution, bounds)
+    return cls('Current Velocity', scalar_field, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
 
 
 
@@ -627,6 +720,8 @@ def loadWorld(roms_file, world_center, world_width, world_height, world_resoluti
         feature       = science_variable,
         resolution    = world_resolution
         )
+
+      # pdb.set_trace()
 
       dd.io.save(world_file_full_path, wd, compression='zlib')
       print "World saved to %s" % world_file_full_path

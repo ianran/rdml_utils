@@ -11,13 +11,13 @@ import matplotlib.pyplot as plt
 
 class GPWorldModel(object):
   """docstring for GPWorldModel"""
-  def __init__(self, gp_num_dimensions, gp_x, gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=False):
+  def __init__(self, gp_num_dimensions, gp_x, gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp, num_inducing):
     kernel = GPy.kern.RBF(input_dim=gp_num_dimensions, variance=gp_initial_variance, lengthscale=gp_length_scales, ARD=True)
 
     assert gp_x.shape[1] == gp_num_dimensions
 
     if use_sparse_gp:
-      self.model = GPy.models.SparseGPRegression(gp_x, gp_y, kernel, num_inducing=100)
+      self.model = GPy.models.SparseGPRegression(gp_x, gp_y, kernel, num_inducing=num_inducing)
     else:
       self.model = GPy.models.GPRegression(gp_x, gp_y, kernel)
 
@@ -50,7 +50,7 @@ class GPWorldModel(object):
 
 class GPStaticWorldModel(GPWorldModel):
   """docstring for GPWorldModel"""
-  def __init__(self, obs, gp_initial_variance, gp_length_scales, gp_mean):
+  def __init__(self, obs, gp_initial_variance, gp_length_scales, gp_mean, sparse=False, num_inducing=100):
     self.mean_estimate = gp_mean
 
     self.gp_x = np.array([[x.loc.lon, x.loc.lat] for x in obs])
@@ -59,7 +59,7 @@ class GPStaticWorldModel(GPWorldModel):
     
     self.gp_y = np.reshape(self.gp_y - self.prior_y, (len(self.gp_y), -1))
 
-    GPWorldModel.__init__(self, 2, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=False)
+    GPWorldModel.__init__(self, 2, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=sparse, num_inducing=num_inducing)
 
   def queryPoint(self, lon, lat, time=0.0):
     #assumes Lon, Lat, Time
@@ -87,7 +87,7 @@ class GPStaticWorldModel(GPWorldModel):
 
 class GPTimeVaryingWorldModel(GPWorldModel):
   """docstring for GPWorldModel"""
-  def __init__(self, obs, gp_initial_variance, gp_length_scales, gp_mean, gp_time_scale_factor=1.0):
+  def __init__(self, obs, gp_initial_variance, gp_length_scales, gp_mean, gp_time_scale_factor=1.0, sparse=False, num_inducing=100):
     self.mean_estimate = gp_mean
     self.gp_time_scale_factor = gp_time_scale_factor
 
@@ -97,7 +97,7 @@ class GPTimeVaryingWorldModel(GPWorldModel):
     self.gp_y = np.reshape(self.gp_y - self.prior_y, (len(self.gp_y), -1))
 
 
-    GPWorldModel.__init__(self, 3, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=False)
+    GPWorldModel.__init__(self, 3, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=sparse, num_inducing=num_inducing)
 
   
   def queryPoint(self, lon, lat, time=0.0):
@@ -127,7 +127,7 @@ class GPTimeVaryingWorldModel(GPWorldModel):
 
 class GPComboTimeVaryingWorldModel(GPWorldModel):
   """docstring for GPComboWorldModel"""
-  def __init__(self, obs, gp_initial_variance, gp_length_scales, x_ticks, y_ticks, gp_time_scale_factor=1.0, nn_omit_time=-float('inf')):
+  def __init__(self, obs, gp_initial_variance, gp_length_scales, x_ticks, y_ticks, gp_time_scale_factor=1.0, nn_omit_time=-float('inf'), sparse=False, num_inducing=100):
     self.gp_time_scale_factor = gp_time_scale_factor
     world_est_time = time.time()
 
@@ -158,7 +158,7 @@ class GPComboTimeVaryingWorldModel(GPWorldModel):
     self.prior_y = np.array([self.getPriorPoint([x.loc.lon, x.loc.lat, x.time]) for x in obs])
     self.gp_y = np.reshape(self.gp_y - self.prior_y, (len(self.gp_y), -1))
 
-    GPWorldModel.__init__(self, 3, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, prior_gp, use_sparse_gp=False)
+    GPWorldModel.__init__(self, 3, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, prior_gp, use_sparse_gp=sparse, num_inducing=num_inducing)
 
   def queryPoint(self, lon, lat, time=0.0):
     #assumes Lon, Lat, Time

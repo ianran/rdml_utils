@@ -45,6 +45,13 @@ class HSignature(object):
   def __add__(self, other):
     return HSignature(self.signature + other.signature)
 
+  def __hash__(self):
+    s = str(self)
+    return s.__hash__()
+
+
+
+
 
   @classmethod
   def fromPath(cls, path, representative_pts):
