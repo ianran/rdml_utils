@@ -422,4 +422,3 @@ class WorldEstimate(object):
 
   def getRandomLocation(self):
     return [random.choice(self.x_ticks), random.choice(self.y_ticks)]
-

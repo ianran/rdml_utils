@@ -28,6 +28,21 @@ class HSignature(object):
 
     self.reduce()
 
+  def contains(self, other):
+    # True if Other is an extension of Self
+    l_self = len(self.signature)
+    l_other = len(other.signature)
+
+    if l_self == l_other:
+      return self == other
+    
+    elif l_self > l_other:
+      return self.signature[:l_self] == other.signature
+    
+    else:
+      return False
+
+
   def __len__(self):
     return len(self.signature)
 
