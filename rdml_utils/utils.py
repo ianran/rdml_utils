@@ -4,8 +4,7 @@ import scipy.ndimage as ndimage
 import numpy as np
 
 from shapely.geometry import Point, Polygon, LineString
-from Queue import Queue
-import math, operator, datetime, pdb, haversine, os, errno
+import math, operator, datetime, pdb, haversine, os, errno, Queue
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -27,11 +26,14 @@ class EndOfSimException(Exception):
 class QueueSet(object):
   """docstring for QueueSet"""
   def __init__(self):
-    self.queue = Queue()
+    self.queue = Queue.Queue()
     self.queue_set = []
 
   def __len__(self):
     return len(self.queue_set)
+
+  def __contains__(self, item):
+    return query in self.queue_set
 
   def qsize(self):
     return self.queue.qsize()
@@ -59,6 +61,29 @@ class QueueSet(object):
   def empty(self):
     return self.queue.empty()
 
+
+class PriorityQueueSet(QueueSet):
+  """docstring for PriorityQueueSet"""
+  def __init__(self):
+    QueueSet.__init__(self)
+    self.queue = Queue.PriorityQueue()
+
+  def push(self, item, priority):
+    if item not in self.queue_set:
+      self.queue.put((priority, item))
+      self.queue_set.append(item)
+      return True
+    else:
+      return False
+
+
+  def pop(self):
+    try:
+      item = self.queue.get_nowait()[1]
+    except Queue.Empty:
+      return None
+    self.queue_set.remove(item)
+    return item
 
 ####################################
 ## Utility Functions

@@ -11,7 +11,7 @@ class HSignature(object):
   def invert(self):
     self.signature = tuple(-1*item for item in self.signature)
 
-  def checkLooping(self):
+  def isLooping(self):
     # Return True if there is a loop in the H signature 
     return not len(set(self.signature)) == len(self.signature)
 
