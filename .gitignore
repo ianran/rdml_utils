@@ -4,6 +4,11 @@
 # Nano Swap Files
 *.swp 
 
+# data folder because Ian is lazy and wanted to keep in the same folder as
+# as the world.py main wanted it there
+data
+results
+
 # Setuptools distribution folder.
 /dist/
 

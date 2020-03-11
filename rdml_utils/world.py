@@ -19,7 +19,7 @@ from roms import getROMSData, reshapeROMS
 class World(object):
 
   """docstring for World"""
-  def __init__(self, sci_type, scalar_fields, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
+  def __init__(self, sci_types, scalar_fields, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
     self.science_variable_types = sci_types
 
     self.scalar_fields = [field.data for field in scalar_fields]  # Shape (X_ticks, y_ticks, t_ticks)
@@ -537,7 +537,7 @@ class World(object):
 
 
 
-    current_u, u_lat, u_lon, _ = getROMSData(datafile_path, 'u')
+    current_u, u_lat, u_lon, roms_t = getROMSData(datafile_path, 'u')
     current_v, v_lat, v_lon, _ = getROMSData(datafile_path, 'v')
 
     output_shape = (len(x_ticks), len(y_ticks), len(roms_t))
@@ -779,7 +779,7 @@ def main():
   datafile_path = os.path.dirname(os.path.realpath(__file__)) + "/../data/roms_data/"
   datafile_name = "txla_roms/txla_hindcast_jun_1_2015.nc"
 
-  wd = World.roms(datafile_path + datafile_name, 20, 20, Location(xlon=-94.25, ylat=28.25), feature=['salt'], resolution=(0.1, 0.1))
+  wd = World.roms(datafile_path + datafile_name, 20, 20, Location(xlon=-94.25, ylat=28.25), feature=['temp','salt'], resolution=(0.1, 0.1))
 
   print "Generating Figures"
 
