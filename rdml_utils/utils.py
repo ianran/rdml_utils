@@ -4,12 +4,18 @@ import scipy.ndimage as ndimage
 import numpy as np
 
 from shapely.geometry import Point, Polygon, LineString
-import math, operator, datetime, pdb, haversine, os, errno, Queue
+import math, operator, datetime, pdb, haversine, os, errno, sys
+if sys.version_info[0] < 3:
+    # python 2
+    import Queue
+else:
+    # python 3
+    import queue as Queue
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import cv2 as cv
-from matplotlib.mlab import bivariate_normal
+#from matplotlib.mlab import bivariate_normal
 
 from location import Location, Observation, StampedLocation
 
@@ -340,7 +346,11 @@ def normalizeField(field):
 
 def castGaussian(loc, variance, xx, yy, magnitude=1.0):
   #Scoops out novely defined by variance and magnitude at location
-  res = bivariate_normal(xx, yy, 0.5*variance, 0.5*variance, loc.x, loc.y)
+  #res = bivariate_normal(xx, yy, 0.5*variance, 0.5*variance, loc.x, loc.y)
+
+  # updated to modern numpy rather than archiac matlab like bivariate normal :p
+  res = np.random.multivariate_normal([loc.x, loc.y],[[0.5*variance, 0],[0, 0.5*variance]], size=(xx,yy))
+
   return 1. - normalizeField(res - np.min(res)) * magnitude
 
 
