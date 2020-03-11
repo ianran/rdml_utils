@@ -42,7 +42,7 @@ class Robot(object):
       self_distance = 0.
 
     else:
-      while euclideanDist(self.future_plan[0], self.location) < self.vel * sim_period: #self.waypoint_tolerance:  # (self.future_plan[0]-self.location).getMagnitude() 
+      while euclideanDist(self.future_plan[0], self.location) < self.vel * sim_period: #self.waypoint_tolerance:  # (self.future_plan[0]-self.location).getMagnitude()
         self.incrementWaypoint()
         if len(self.future_plan) == 0:
           if isinstance(self.past_path[-1], StampedLocation):
@@ -58,7 +58,7 @@ class Robot(object):
           self_direction  = (self.future_plan[0].loc-self.location).getUnit()
         else:
           self_direction  = (self.future_plan[0]-self.location).getUnit()
-          
+
         # self_direction  = (self.future_plan[0]-self.location).getUnit()
         self_distance = self.vel*sim_period
 
@@ -101,20 +101,20 @@ def loadRobots(robots_list, robots_data, robots_cfg, robots_future_plans=None, c
       new_bot.future_plan = [StampedLocation(ct.latlon2xy(Location(xlon=coord['lon'], ylat=coord['lat'])), coord['time']) for coord in robots_future_plans[bot_name]['future']]
       new_bot.time_last_plan = robots_future_plans[bot_name]['planning_time']
     else:
-      print "[Warning] Failed to load plan for %s" % bot_name
+      print( "[Warning] Failed to load plan for %s" % bot_name )
 
     if load_time - bot_data['datetime'][-1] >= 600:
-      plan_start_loc_idx = np.argmin([abs(x - new_bot.future_plan[0].time) for x in bot_data['datetime']]) 
-      new_bot.future_plan[0] = StampedLocation(ct.latlon2xy(Location(xlon=bot_data['longitude'][plan_start_loc_idx], 
+      plan_start_loc_idx = np.argmin([abs(x - new_bot.future_plan[0].time) for x in bot_data['datetime']])
+      new_bot.future_plan[0] = StampedLocation(ct.latlon2xy(Location(xlon=bot_data['longitude'][plan_start_loc_idx],
                                                                      ylat=bot_data['latitude'][plan_start_loc_idx])),
                                                new_bot.future_plan[0].time)
 
       new_bot.location = robotLocFromPlan(load_time, new_bot)[0]
-      print "[Warning] Position estimate for %s-%s over 10 min old, interpolating along path instead" % (bot_type, bot_name)
+      print( "[Warning] Position estimate for %s-%s over 10 min old, interpolating along path instead" % (bot_type, bot_name) )
 
     res_robots.append(new_bot)
 
-  print "Loaded %d robots" % len(res_robots)
+  print( "Loaded %d robots" % len(res_robots) )
   return res_robots
 
 
@@ -130,12 +130,12 @@ def fixedLoadRobots(robots_list, robots_data, robots_cfg, robots_future_plans=No
       new_bot.future_plan = [StampedLocation(ct.latlon2xy(Location(xlon=coord['lon'], ylat=coord['lat'])), coord['time']) for coord in robots_future_plans[bot_name]['future']]
       new_bot.time_last_plan = robots_future_plans[bot_name]['planning_time']
     else:
-      print "[Warning] Failed to load plan for %s" % bot_name
+      print( "[Warning] Failed to load plan for %s" % bot_name )
 
     if load_time - bot_data['datetime'][-1] >= 600:
-      plan_start_loc_idx = np.argmin([abs(x - new_bot.future_plan[0].time) for x in bot_data['datetime']]) 
-      estimated_start_loc = StampedLocation(ct.latlon2xy(Location(xlon=bot_data['longitude'][plan_start_loc_idx], 
-                                                                  ylat=bot_data['latitude'][plan_start_loc_idx])), 
+      plan_start_loc_idx = np.argmin([abs(x - new_bot.future_plan[0].time) for x in bot_data['datetime']])
+      estimated_start_loc = StampedLocation(ct.latlon2xy(Location(xlon=bot_data['longitude'][plan_start_loc_idx],
+                                                                  ylat=bot_data['latitude'][plan_start_loc_idx])),
                                             bot_data['datetime'][plan_start_loc_idx])
 
       new_bot.future_plan = [estimated_start_loc] + new_bot.future_plan[2:]
@@ -145,9 +145,9 @@ def fixedLoadRobots(robots_list, robots_data, robots_cfg, robots_future_plans=No
 
       new_bot.location = robotLocFromPlan(load_time, new_bot)[0]
 
-      print "[Warning] Position estimate for %s-%s over 10 min old, interpolating along path instead" % (bot_type, bot_name)
+      print( "[Warning] Position estimate for %s-%s over 10 min old, interpolating along path instead" % (bot_type, bot_name) )
 
     res_robots.append(new_bot)
 
-  print "Loaded %d robots" % len(res_robots)
+  print( "Loaded %d robots" % len(res_robots) )
   return res_robots

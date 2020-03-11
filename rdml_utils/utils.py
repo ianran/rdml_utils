@@ -21,7 +21,7 @@ from location import Location, Observation, StampedLocation
 
 class EndOfSimException(Exception):
   pass
-  
+
 
 class QueueSet(object):
   """docstring for QueueSet"""
@@ -155,7 +155,7 @@ def findMax(z):
   for dy,dx in slices:
     x_center = (dx.start + dx.stop - 1)/2
     max_x.append(x_center)
-    y_center = (dy.start + dy.stop - 1)/2   
+    y_center = (dy.start + dy.stop - 1)/2
     max_y.append(y_center)
 
   return max_x, max_y
@@ -172,7 +172,7 @@ def findMin(z):
   for dy,dx in slices:
     x_center = (dx.start + dx.stop - 1)/2
     min_x.append(x_center)
-    y_center = (dy.start + dy.stop - 1)/2   
+    y_center = (dy.start + dy.stop - 1)/2
     min_y.append(y_center)
 
   return min_x, min_y
@@ -222,7 +222,7 @@ def loc2cell(loc, bounds, mat_shape):
   e_bound = bounds[2]
   w_bound = bounds[3]
 
-  n_s_step = float(n_bound - s_bound)/mat_shape[1]  
+  n_s_step = float(n_bound - s_bound)/mat_shape[1]
   e_w_step = float(e_bound - w_bound)/mat_shape[0]
 
 
@@ -255,7 +255,7 @@ def cell2loc(cell, bounds, mat_shape):
 def euclideanDist(p1, p2):
   if isinstance(p1, Location) and isinstance(p2, Location):
     return math.sqrt((p1.x - p2.x)**2 + (p1.y-p2.y)**2)
-  
+
   elif isinstance(p1, Location) and isinstance(p2, StampedLocation):
     return math.sqrt((p1.x - p2.loc.x)**2 + (p1.y-p2.loc.y)**2)
 
@@ -313,23 +313,23 @@ def getFencedData(scalar_field, geofence, roms_lat, roms_lon):
   west_bound_pt, west_bound_key = min(exterior_lon, key=lambda x: abs(x[0]-w_fence_bound))
 
 
-  print fence_bounds
-  print north_bound_pt, north_bound_key
-  print south_bound_pt, south_bound_key
-  print east_bound_pt, east_bound_key
-  print west_bound_pt, west_bound_key
+  print( fence_bounds )
+  print( north_bound_pt, north_bound_key )
+  print( south_bound_pt, south_bound_key )
+  print( east_bound_pt, east_bound_key )
+  print( west_bound_pt, west_bound_key )
 
 
   fenced_lat = roms_lat[south_bound_key:north_bound_key+1]
   fenced_lon = roms_lon[west_bound_key:east_bound_key+1]
-  
+
   fenced_scalar_field = scalar_field[south_bound_key:north_bound_key+1, west_bound_key:east_bound_key+1]
 
   return fence_bounds, fenced_lat, fenced_lon, fenced_scalar_field
 
 def normalizeField(field):
   field_max = np.max(field)
-  
+
   if field_max != 0.0:
     res = field / field_max
     return res
@@ -478,14 +478,14 @@ def segmentInRectangle(v1, v2, c1, c2, c3, c4):
   # Checks if a line segment defined by v1 and v2 ever enters a rectangle defined by the 4 corners c1-c4.
   #  (note that these corners are assumed to be in order either clockwise or counterclockwise)
   #
-  #   c1 ------- c2     c1 ------- c4 
-  #   |          |      |          | 
-  #   |          |  or  |          | 
-  #   |          |      |          | 
-  #   c4 ------- c3     c2 ------- c3 
+  #   c1 ------- c2     c1 ------- c4
+  #   |          |      |          |
+  #   |          |  or  |          |
+  #   |          |      |          |
+  #   c4 ------- c3     c2 ------- c3
 
 
-  # If either v1 or v2 lie within the rectangle, some of the segment is within the rectangle 
+  # If either v1 or v2 lie within the rectangle, some of the segment is within the rectangle
 
   vertices = np.array([[pt.x, pt.y] for pt in [c1, c2, c3, c4]])
 
@@ -513,8 +513,8 @@ def segmentIntersect(l1, l2, v1, v2):
   d3 = np.linalg.det(np.array([ [v1.x - l2.x, v2.x - l2.x], [v1.y - l2.y, v2.y - l2.y] ]))
 
   if (d0 == 0) and (d1 == 0) and (d2 == 0) and (d3 == 0):
-    return min(max(l1.x, l2.x), max(v1.x, v2.x)) >= max(min(v1.x, v2.x), min(l1.x, l2.x)) 
-  elif (d0 * d1 <= 0) and (d2 * d3 <= 0): 
+    return min(max(l1.x, l2.x), max(v1.x, v2.x)) >= max(min(v1.x, v2.x), min(l1.x, l2.x))
+  elif (d0 * d1 <= 0) and (d2 * d3 <= 0):
     return True
   else:
     return False
@@ -524,7 +524,7 @@ def distanceToSegment(segment_locs, query_loc):
   assert len(segment_locs) >= 2, "Needed at least 2 points to form segment"
 
   segments = LineString([list(x) for x in segment_locs])
-  pt = query_loc.shapelyPoint() 
+  pt = query_loc.shapelyPoint()
   return segments.distance(pt)
 
   # Adapted from: https://gist.github.com/nim65s/5e9902cd67f094ce65b0
@@ -550,7 +550,7 @@ def distanceToPoly(poly_locs, query_loc, units='km'):
   assert len(poly_locs) >= 3, "Needed at least 3 points to form Polygon"
 
   poly = Polygon([list(x) for x in poly_locs])
-  pt = query_loc.shapelyPoint() 
+  pt = query_loc.shapelyPoint()
 
   dist_magnitude = poly.exterior.distance(pt)
   dist_sign_indicator = poly.distance(pt)
@@ -600,22 +600,22 @@ def robotLocFromPlan(current_time, robot):
   # pdb.set_trace()
   if current_time >= robot.future_plan[-1].time:
     # If the robot is expected to have finished the plan, return the last waypoint
-    print "Robot %s is expected to have finished plan" % robot.name
+    print( "Robot %s is expected to have finished plan" % robot.name )
     return robot.future_plan[-1].loc, None
   else:
     # Otherwise interpolate along the path to find the robot's predicted location
     try:
       last_wpt, last_wpt_idx = next([x, idx] for idx, x in enumerate(robot.future_plan[::-1]) if x.time <= current_time)
-      last_wpt_idx = len(robot.future_plan) - last_wpt_idx - 1 
+      last_wpt_idx = len(robot.future_plan) - last_wpt_idx - 1
 
       current_wpt_idx = last_wpt_idx + 1
-      current_wpt = robot.future_plan[current_wpt_idx] 
+      current_wpt = robot.future_plan[current_wpt_idx]
       # unit_vec = (current_wpt.loc - last_wpt.loc).getUnit()
       # return last_wpt.loc + unit_vec * robot.vel * (current_time - last_wpt.time), current_wpt_idx
       vec = (current_wpt.loc - last_wpt.loc)
       return last_wpt.loc + vec * (current_time - last_wpt.time) / (current_wpt.time - last_wpt.time), current_wpt_idx
     except:
-      print "Dylan's addition"
+      print( "Dylan's addition" )
       return robot.future_plan[-1].loc, len(robot.future_plan)-1
 
 
@@ -630,10 +630,10 @@ def robotLocFromPlan(current_time, robot):
 #     # Otherwise interpolate along the path to find the robot's predicted location
 #     try:
 #       last_wpt, last_wpt_idx = next([x, idx] for idx, x in enumerate(robot.future_plan[::-1]) if x.time <= current_time)
-#       last_wpt_idx = len(robot.future_plan) - last_wpt_idx - 1 
+#       last_wpt_idx = len(robot.future_plan) - last_wpt_idx - 1
 
 #       current_wpt_idx = last_wpt_idx + 1
-#       current_wpt = robot.future_plan[current_wpt_idx] 
+#       current_wpt = robot.future_plan[current_wpt_idx]
 #       # unit_vec = (current_wpt.loc - last_wpt.loc).getUnit()
 #       # return last_wpt.loc + unit_vec * robot.vel * (current_time - last_wpt.time), current_wpt_idx
 
@@ -665,7 +665,7 @@ def loadObservations(vehicle_data, planning_robots, min_depth, obs_type, obs_pas
   vehicle_obs = []
 
   for vehicle_type in vehicle_data:
-    
+
     vehicle_type_data = vehicle_data[vehicle_type]
     for vehicle_name in vehicle_type_data:
       if vehicle_name in planning_robots:
@@ -679,7 +679,7 @@ def loadObservations(vehicle_data, planning_robots, min_depth, obs_type, obs_pas
 
         new_vehicle_obs = [Observation(Location(xlon=x, ylat=y), data=data, time=obs_time) for x, y, depth, data, obs_time in combined_data if (depth < min_depth) and (obs_time >= obs_past_time) and (obs_time <= obs_future_time)]
 
-        new_vehicle_obs = fancyStride(new_vehicle_obs, 1000)      
+        new_vehicle_obs = fancyStride(new_vehicle_obs, 1000)
 
         vehicle_obs += new_vehicle_obs
 

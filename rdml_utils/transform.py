@@ -9,10 +9,10 @@ import oyaml as yaml
 class CoordTransformer(object):
   # Wrapper Class for handling the translation, rotation, and scaling to move
   #   a coordinate from the global (Latitude / Longitude) frame to the planning
-  #   (X, Y kilometer) frame. 
+  #   (X, Y kilometer) frame.
   def __init__(self, region_heading, region_center, region_velocity):
     # Region Heading = Heading in Degrees from the Vertical, Positive angle is CCW
-    # Region Center = Center of Target Region in Decimal Degrees Latitude and Longitude 
+    # Region Center = Center of Target Region in Decimal Degrees Latitude and Longitude
     # Region Velocity = Velocity of region in global frame in km / s
 
     self.rotate_theta = math.radians(region_heading)
@@ -23,27 +23,27 @@ class CoordTransformer(object):
     scale_y = haversine.haversine((region_center.lat, region_center.lon), (region_center.lat + 1., region_center.lon))  # KM per Degree Latitude
 
 
-    self.rotate_transform = np.array([[math.cos(self.rotate_theta), -math.sin(self.rotate_theta), 0], 
+    self.rotate_transform = np.array([[math.cos(self.rotate_theta), -math.sin(self.rotate_theta), 0],
                                       [math.sin(self.rotate_theta),  math.cos(self.rotate_theta), 0],
                                       [0,                       0,                      1]])
 
-    self.translate_transform = np.array([[1, 0, self.translate_x], 
+    self.translate_transform = np.array([[1, 0, self.translate_x],
                                          [0, 1, self.translate_y],
                                          [0, 0, 1]])
 
-    self.scaling_transform = np.array([[scale_x, 0,       0], 
+    self.scaling_transform = np.array([[scale_x, 0,       0],
                                        [0,       scale_y, 0],
                                        [0,       0,       1]])
 
-    self.reverse_rotate_transform = np.array([[math.cos(-self.rotate_theta), -math.sin(-self.rotate_theta), 0], 
+    self.reverse_rotate_transform = np.array([[math.cos(-self.rotate_theta), -math.sin(-self.rotate_theta), 0],
                                               [math.sin(-self.rotate_theta),  math.cos(-self.rotate_theta), 0],
                                               [0,                        0,                       1]])
 
-    self.reverse_translate_transform = np.array([[1, 0, -self.translate_x], 
+    self.reverse_translate_transform = np.array([[1, 0, -self.translate_x],
                                                  [0, 1, -self.translate_y],
                                                  [0, 0,  1]])
 
-    self.reverse_scaling_transform = np.array([[1./scale_x, 0,       0], 
+    self.reverse_scaling_transform = np.array([[1./scale_x, 0,       0],
                                                [0,       1./scale_y, 0],
                                                [0,       0,          1]])
 
@@ -74,47 +74,47 @@ class CoordTransformer(object):
     else:
       region_velocity = LocDelta(d_ylat=0.0, d_xlon=0.0)
 
-    return cls(region_heading, region_center, region_velocity) 
+    return cls(region_heading, region_center, region_velocity)
 
   def updateHeading(self, new_heading):
     self.rotate_theta = math.radians(region_heading)
 
-    self.rotate_transform = np.array([[math.cos(self.rotate_theta), -math.sin(self.rotate_theta), 0], 
+    self.rotate_transform = np.array([[math.cos(self.rotate_theta), -math.sin(self.rotate_theta), 0],
                                       [math.sin(self.rotate_theta),  math.cos(self.rotate_theta), 0],
                                       [0,                       0,                      1]])
-    
-    self.reverse_rotate_transform = np.array([[math.cos(-self.rotate_theta), -math.sin(-self.rotate_theta), 0], 
+
+    self.reverse_rotate_transform = np.array([[math.cos(-self.rotate_theta), -math.sin(-self.rotate_theta), 0],
                                               [math.sin(-self.rotate_theta),  math.cos(-self.rotate_theta), 0],
                                               [0,                        0,                       1]])
 
 
   def updateCenter(self, new_center):
     self.translate_x, self.translate_y = (new_center - Location(0, 0)).npArray()  # DX, DY in terms of Degrees Lon / Lat, respectively
-    
+
     # Assuming the world is flat nearby the region center
     scale_x = haversine.haversine((new_center.lat, new_center.lon), (new_center.lat, new_center.lon + 1.))  # KM per Degree Longitude
     scale_y = haversine.haversine((new_center.lat, new_center.lon), (new_center.lat + 1., new_center.lon))  # KM per Degree Latitude
 
-    self.translate_transform = np.array([[1, 0, self.translate_x], 
+    self.translate_transform = np.array([[1, 0, self.translate_x],
                                          [0, 1, self.translate_y],
                                          [0, 0, 1]])
 
-    self.scaling_transform = np.array([[scale_x, 0,       0], 
+    self.scaling_transform = np.array([[scale_x, 0,       0],
                                        [0,       scale_y, 1],
                                        [0,       0,       1]])
 
-    self.reverse_translate_transform = np.array([[1, 0, -self.translate_x], 
+    self.reverse_translate_transform = np.array([[1, 0, -self.translate_x],
                                                  [0, 1, -self.translate_y],
                                                  [0, 0,  1]])
 
-    self.reverse_scaling_transform = np.array([[1./scale_x, 0,       0], 
+    self.reverse_scaling_transform = np.array([[1./scale_x, 0,       0],
                                                [0,       1./scale_y, 0],
                                                [0,       0,          1]])
 
   def latlon2xy(self, coord):
     np_coord = (np.hstack((coord.npArray(), 1))[np.newaxis]).transpose()
     translated_coord = np.matmul(self.translate_transform, np_coord)
-    rotated_coord = np.matmul(self.rotate_transform, translated_coord)  
+    rotated_coord = np.matmul(self.rotate_transform, translated_coord)
     final_coord = np.matmul(self.scaling_transform, rotated_coord)
 
     return Location(xlon=float(final_coord[0]), ylat=float(final_coord[1]))
@@ -183,7 +183,7 @@ if __name__ == '__main__':
   transformed_global_frame_current = ct.uv2planningFrame(global_frame_current) * 100
   transformed_planning_frame_current = ct.uv2globalFrame(planning_frame_current) / 100
 
-  
+
   try:
     assert ct.latlon2xy(ct.xy2latlon(xy_coord)) == xy_coord
   except AssertionError:
@@ -194,14 +194,14 @@ if __name__ == '__main__':
   except AssertionError:
     pdb.set_trace()
 
-  print "global_frame_heading: %.03f" % global_frame_heading
-  print "planning_frame_heading: %.03f" % planning_frame_heading
+  print( "global_frame_heading: %.03f" % global_frame_heading )
+  print( "planning_frame_heading: %.03f" % planning_frame_heading )
 
   transformed_global_frame_heading = ct.headingglobal2local(global_frame_heading)
   transformed_planning_frame_heading = ct.headinglocal2global(planning_frame_heading)
 
-  print "transformed_global_frame_heading: %.03f" % transformed_global_frame_heading
-  print "transformed_planning_frame_heading: %.03f" % transformed_planning_frame_heading
+  print( "transformed_global_frame_heading: %.03f" % transformed_global_frame_heading )
+  print( "transformed_planning_frame_heading: %.03f" % transformed_planning_frame_heading )
 
   plt.figure()
   plt.scatter(ref_coord.x, ref_coord.y, color='k')
@@ -233,7 +233,7 @@ if __name__ == '__main__':
   plt.xlabel("X (km)")
   plt.ylabel("Y (km)")
   plt.axis('equal')
-  
+
 
   plt.show(False)
 

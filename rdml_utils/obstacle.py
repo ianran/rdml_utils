@@ -86,7 +86,7 @@ class Obstacle(object):
       obs_geom = LineString([list(pt) for pt in self.points])
     elif self.obs_type == "polygon":
       obs_geom = Polygon([list(pt) for pt in self.points])
-    
+
     return obs_geom.buffer(self.exclusion_radius)
 
 
@@ -102,12 +102,12 @@ class DynamicObstacle(Obstacle):
     self.speed = speed                    # (km/s) Vehicle's speed along its heading
     self.timestamp = timestamp            # Python Datetime Object (UTC)
     self.lookahead_time = lookahead_time  # (s) Number of Seconds forward we should watch out for the obstacle
-    
+
   @classmethod
   def fromStatic(cls, static, speed, heading, timestamp, lookahead_time):
     return cls(static.obs_id, static.points, timestamp, static.exclusion_radius, heading, speed, lookahead_time, static.obs_type)
 
-  def getBuffer(self):  
+  def getBuffer(self):
     dynamic_vec = LocDelta.fromPolar(1.0, 90-math.degrees(self.heading), angle_units='deg') * self.speed * self.lookahead_time
 
     start_pts = self.points
@@ -142,7 +142,7 @@ class DynamicObstacle(Obstacle):
     return cls(obs_dict['obs_id'], obs_locs, timestamp, obstacle_buffer, obs_dict['heading'], obs_dict['speed'], lookahead_time, obs_dict['obstacle_type'])
 
   def pointInCollision(self, query_pt):
-    print "Query", query_pt
+    print( "Query", query_pt )
     start_points = self.points
 
     projection = LocDelta.fromPolar(self.speed * self.lookahead_time, 90.-self.heading, angle_units='deg')
@@ -151,7 +151,7 @@ class DynamicObstacle(Obstacle):
 
     for pts_list in [start_points, projected_points]:
       for pt in pts_list:
-        print pt
+        print( pt )
       if len(self.points) >= 3:
         if self.obs_type == "polygon":
           dist = distanceToPoly(pts_list, query_pt)
@@ -165,7 +165,7 @@ class DynamicObstacle(Obstacle):
         dist = 0
         # We should never be here
         pdb.set_trace()
-      print dist
+      print( dist )
       if dist <= self.exclusion_radius:
         return True
 
@@ -182,12 +182,12 @@ class DynamicObstacle(Obstacle):
   def step(self, sim_period, world, step_time, ignore_currents=False):
     self_direction = LocDelta(d_xlon=math.sin(self.heading), d_ylat=math.cos(self.heading))
     self_distance = self.speed*sim_period
-    
+
     if ignore_currents:
       ocean_current_disturbance = LocDelta(0., 0.)
     else:
       ocean_current_disturbance = world.getUVcurrent(self.points[0], step_time) * sim_period / 1000.
-    
+
     self.timestamp = step_time
     self.points = [pt + self_direction*self_distance + ocean_current_disturbance for pt in self.points]
 
@@ -212,7 +212,7 @@ def loadObstacles(static_obstacles_dict, dynamic_obstacles_dict, mission_cfg, ct
   static_obstacles = []
   dynamic_obstacles = []
   bounding_box = [Location(ylat=mission_cfg['bounding_box'][ns], xlon=mission_cfg['bounding_box'][ew]) for ns, ew in zip(['north', 'north', 'south', 'south'], ['east', 'west', 'west', 'east'])]
-  
+
   # Issue here is thast we are comparing km and deg - not good
   # Not sure what solution is as idk how we are converting between\
   if static_obstacles_dict is not None:
@@ -223,11 +223,11 @@ def loadObstacles(static_obstacles_dict, dynamic_obstacles_dict, mission_cfg, ct
         if ct is not None:
           obs.points = [ct.latlon2xy(pt) for pt in obs.points]
           if ct.vel != LocDelta(0,0):
-            relative_obs_speed, relative_obs_theta = ct.vel.asPolar(degrees=True) 
-            # obs = DynamicObstacle.fromStatic(obs, relative_obs_speed, (90 - (relative_obs_theta + 180)) % 360, datetime.datetime.utcnow(), lookahead_time=mission_cfg['dynamic_obstacle_lookahead']) 
-            obs = DynamicObstacle.fromStatic(obs, relative_obs_speed, (relative_obs_theta + 180) % 360, datetime.datetime.utcnow(), lookahead_time=mission_cfg['dynamic_obstacle_lookahead']) 
+            relative_obs_speed, relative_obs_theta = ct.vel.asPolar(degrees=True)
+            # obs = DynamicObstacle.fromStatic(obs, relative_obs_speed, (90 - (relative_obs_theta + 180)) % 360, datetime.datetime.utcnow(), lookahead_time=mission_cfg['dynamic_obstacle_lookahead'])
+            obs = DynamicObstacle.fromStatic(obs, relative_obs_speed, (relative_obs_theta + 180) % 360, datetime.datetime.utcnow(), lookahead_time=mission_cfg['dynamic_obstacle_lookahead'])
 
-        
+
         static_obstacles.append(obs)
 
 
@@ -241,7 +241,7 @@ def loadObstacles(static_obstacles_dict, dynamic_obstacles_dict, mission_cfg, ct
           obs.heading = ct.headingglobal2local(obs.heading, units='degrees')
         dynamic_obstacles.append(obs)
 
-  print "Loaded %d static obstacles and %d dynamic obstacles" % (len(static_obstacles), len(dynamic_obstacles))
+  print( "Loaded %d static obstacles and %d dynamic obstacles" % (len(static_obstacles), len(dynamic_obstacles)) )
   return static_obstacles + dynamic_obstacles
 
 

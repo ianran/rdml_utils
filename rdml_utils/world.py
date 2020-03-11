@@ -721,12 +721,12 @@ def loadWorld(roms_file, world_center, world_width, world_height, world_resoluti
 
     world_file_full_path = os.path.expandvars(save_dir + world_file_name)
     if os.path.isfile(world_file_full_path):
-      print "%s Exists" % world_file_full_path
+      print( "%s Exists" % world_file_full_path )
       wd = dd.io.load(world_file_full_path)
-      print "Loaded World from File"
+      print( "Loaded World from File" )
 
     else:
-      print "%s Does Not Exist" % world_file_full_path
+      print( "%s Does Not Exist" % world_file_full_path )
       wd = World.roms(
         datafile_path = roms_file,
         xlen          = world_width,
@@ -739,7 +739,7 @@ def loadWorld(roms_file, world_center, world_width, world_height, world_resoluti
       # pdb.set_trace()
 
       dd.io.save(world_file_full_path, wd, compression='zlib')
-      print "World saved to %s" % world_file_full_path
+      print( "World saved to %s" % world_file_full_path )
 
 
   else:
@@ -781,7 +781,7 @@ def main():
 
   wd = World.roms(datafile_path + datafile_name, 20, 20, Location(xlon=-94.25, ylat=28.25), feature=['temp','salt'], resolution=(0.1, 0.1))
 
-  print "Generating Figures"
+  print( "Generating Figures" )
 
   for t_idx, t in enumerate(wd.t_ticks):
     fig = plt.figure()

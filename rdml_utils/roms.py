@@ -97,7 +97,7 @@ def loadMontereyROMSData(datafile_path, feature="temperature"):
 def loadTXLAROMSData(datafile_path, feature='temperature'):
   roms_dataset = nc.Dataset(datafile_path)
   base_time = datetime.datetime.strptime(str(roms_dataset['ocean_time'].units), "seconds since %Y-%m-%d %H:%M:%S")
-  times = np.array([(base_time - datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=int(dt))).total_seconds() for dt in roms_dataset['ocean_time'][:]]) 
+  times = np.array([(base_time - datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=int(dt))).total_seconds() for dt in roms_dataset['ocean_time'][:]])
 
   if feature == 'temp' or feature == 'temperature':
     lat = roms_dataset['lat_rho'][:]
@@ -121,13 +121,13 @@ def loadTXLAROMSData(datafile_path, feature='temperature'):
     lat = roms_dataset['lat_u'][:]
     lon = roms_dataset['lon_u'][:]
     # times = roms_dataset['ocean_time'][:]
-    scalar_field = roms_dataset['u'][:,0,:,:]   
+    scalar_field = roms_dataset['u'][:,0,:,:]
 
   elif feature == 'current_v' or feature == "v":
     lat = roms_dataset['lat_v'][:]
     lon = roms_dataset['lon_v'][:]
     # times = roms_dataset['ocean_time'][:]
-    scalar_field = roms_dataset['v'][:,0,:,:]  
+    scalar_field = roms_dataset['v'][:,0,:,:]
 
 
   return scalar_field, lat, lon, times
@@ -143,13 +143,13 @@ def reshapeROMS(roms_field, roms_lat, roms_lon, bounds, output_shape):
   filtered_lat = roms_lat
 
   if n_bound > np.nanmax(filtered_lat):
-    print "[Warning] North bound %.3f out of range of ROMS data (%.2f, %.2f)" % (n_bound, np.nanmin(filtered_lat), np.nanmax(filtered_lat))
+    print( "[Warning] North bound %.3f out of range of ROMS data (%.2f, %.2f)" % (n_bound, np.nanmin(filtered_lat), np.nanmax(filtered_lat)) )
   if s_bound < np.nanmin(filtered_lat):
-    print "[Warning] South bound %.3f out of range of ROMS data (%.2f, %.2f)" % (s_bound, np.nanmin(filtered_lat), np.nanmax(filtered_lat))
+    print( "[Warning] South bound %.3f out of range of ROMS data (%.2f, %.2f)" % (s_bound, np.nanmin(filtered_lat), np.nanmax(filtered_lat)) )
   if e_bound > np.nanmax(filtered_lon):
-    print "[Warning] East bound %.3f out of range of ROMS data (%.2f, %.2f)" % (e_bound, np.nanmin(filtered_lon), np.nanmax(filtered_lon))
+    print( "[Warning] East bound %.3f out of range of ROMS data (%.2f, %.2f)" % (e_bound, np.nanmin(filtered_lon), np.nanmax(filtered_lon)) )
   if w_bound < np.nanmin(filtered_lon):
-    print "[Warning] West bound %.3f out of range of ROMS data (%.2f, %.2f)" % (w_bound, np.nanmin(filtered_lon), np.nanmax(filtered_lon))
+    print( "[Warning] West bound %.3f out of range of ROMS data (%.2f, %.2f)" % (w_bound, np.nanmin(filtered_lon), np.nanmax(filtered_lon)))
 
 
   lonlon, latlat = np.mgrid[w_bound:e_bound:output_shape[0]*1j, s_bound:n_bound:output_shape[1]*1j]
@@ -169,7 +169,7 @@ def reshapeROMS(roms_field, roms_lat, roms_lon, bounds, output_shape):
       data = roms_field[t_idx].data.flatten()
     else:
       data = roms_field[t_idx].flatten()
-      
+
     zz = griddata(pts, data, (lonlon,latlat), fill_value=9999.)
     reshaped_field[:,:,t_idx] = zz
 
@@ -182,7 +182,7 @@ def reshapeROMS(roms_field, roms_lat, roms_lon, bounds, output_shape):
 
 def getMoneteryROMS(start_date, end_date, datafile_path):
 
-  print "Loading ROMS Data"
+  print( "Loading ROMS Data" )
   files = []
   dates = []
   for dt in dateRange(start_date, end_date, datetime.timedelta(hours=1)):
@@ -193,18 +193,18 @@ def getMoneteryROMS(start_date, end_date, datafile_path):
       try:
         testfile = urllib.URLopener()
         testfile.retrieve(url, file_path)
-        print dt, "\tLoading Data"
+        print( dt, "\tLoading Data" )
         files.append(file_path)
         dates.append(dt)
         # print url
         print file_path
       except IOError:
         pass
-      print dt, "\tNo Data"
+      print( dt, "\tNo Data" )
       # pass
     else:
       # pass
-      print dt, "\tFile Already Exists"
+      print( dt, "\tFile Already Exists" )
       files.append(file_path)
       dates.append(dt)
   return dates, files

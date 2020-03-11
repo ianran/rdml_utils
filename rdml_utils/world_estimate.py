@@ -16,16 +16,16 @@ class WorldEstimate(object):
   def __init__(self, sci_type, snapshot_time, scalar_field, variance_estimate, current_u_field, current_v_field, x_ticks, y_ticks, env_resolution):
     self.science_variable_type = sci_type
     self.snapshot_time = snapshot_time
-   
+
     self.scalar_field = scalar_field
     self.current_u_field = current_u_field
     self.current_v_field = current_v_field
     self.variance_field = variance_estimate
     self.novelty_field = normalizeField(variance_estimate)
-    
+
     self.x_ticks = x_ticks # km
     self.y_ticks = y_ticks # km
-    
+
     self.env_resolution = env_resolution # km
 
   def withinBounds(self, query_loc):
@@ -50,7 +50,7 @@ class WorldEstimate(object):
     current_v_current = v_interp((loc.x, loc.y))
 
     return LocDelta(d_xlon = float(current_u_current), d_ylat = float(current_v_current))
- 
+
   def getSci(self, loc, t=None):
     sci_interp = RegularGridInterpolator((self.x_ticks, self.y_ticks), self.scalar_field, fill_value=0.0, bounds_error=False)
 
@@ -67,7 +67,7 @@ class WorldEstimate(object):
     return float(variance_interp((loc.x, loc.y)))
 
   def store(self, filename, ct=None):
-    print 'Processing ...'
+    print( 'Processing ...' )
     time = "t%d" % self.snapshot_time
     depth = 'surface'
 
@@ -123,7 +123,7 @@ class WorldEstimate(object):
     env_resolution = global_estimator_params['resolution']
     gp_length_scales = [global_estimator_params['spatial_lengthscale'], global_estimator_params['spatial_lengthscale'], global_estimator_params['temporal_lengthscale']/time_scale_factor]
     gp_init_variance = estimator_params['gp_variance']
-   
+
     x_ticks = np.arange(0.0, mission_params['width']+env_resolution, env_resolution)
     y_ticks = np.arange(0.0, mission_params['height']+env_resolution, env_resolution)
 
@@ -199,7 +199,7 @@ class WorldEstimate(object):
     env_resolution = global_estimator_params['resolution']
     gp_length_scales = [global_estimator_params['spatial_lengthscale'], global_estimator_params['spatial_lengthscale'], global_estimator_params['temporal_lengthscale']/time_scale_factor]
     gp_init_variance = estimator_params['gp_variance']
-   
+
     x_ticks = np.arange(0.0, mission_params['width']+env_resolution, env_resolution)
     y_ticks = np.arange(0.0, mission_params['height']+env_resolution, env_resolution)
 
@@ -261,7 +261,7 @@ class WorldEstimate(object):
     cell_y_size = np.mean([y_ticks[idx+1]-y_ticks[idx] for idx, _ in enumerate(y_ticks[:-1])])
 
     if cell_x_size != cell_y_size:
-      print "Warning: Environmental Mismatch in X and Y dimensions!"
+      print( "Warning: Environmental Mismatch in X and Y dimensions!" )
 
     return cls(mission_params['science_variable'], snapshot_time, scalar_field, variance_field, current_u_field, current_v_field, x_ticks, y_ticks,  cell_x_size)
 
@@ -324,7 +324,7 @@ class WorldEstimate(object):
       cbar = plt.colorbar(CS, format='%.2f',fraction=0.046, pad=0.04)
     plt.title("Estimate Field")
     plt.xlabel("X (km)")
-    plt.ylabel("Y (km)") 
+    plt.ylabel("Y (km)")
     if draw_cbar:
       cbar.set_label(self.science_variable_type)
     ax.axis('scaled')
@@ -348,11 +348,11 @@ class WorldEstimate(object):
     ax.get_xaxis().set_major_formatter(formatter)
     ax.get_yaxis().set_major_formatter(formatter)
     plt.ylim([np.min(self.x_ticks), np.max(self.x_ticks)])
-    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)]) 
+    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)])
     cbar = plt.colorbar(CS, format='%.2f',fraction=0.046, pad=0.04)
     plt.title("Estimate Variance")
     plt.xlabel("X (km)")
-    plt.ylabel("Y (km)") 
+    plt.ylabel("Y (km)")
     cbar.set_label(self.science_variable_type + " variance")
     ax.axis('scaled')
 
@@ -377,11 +377,11 @@ class WorldEstimate(object):
     ax.get_xaxis().set_major_formatter(formatter)
     ax.get_yaxis().set_major_formatter(formatter)
     plt.ylim([np.min(self.x_ticks), np.max(self.x_ticks)])
-    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)]) 
+    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)])
     cbar = plt.colorbar(CS, format='%.3f')
     plt.title("Estimate Gradient")
     plt.xlabel("X (km)")
-    plt.ylabel("Y (km)") 
+    plt.ylabel("Y (km)")
     cbar.set_label(self.science_variable_type + " gradient")
     ax.axis('scaled')
 
@@ -408,11 +408,11 @@ class WorldEstimate(object):
     ax.get_xaxis().set_major_formatter(formatter)
     ax.get_yaxis().set_major_formatter(formatter)
     plt.ylim([np.min(self.x_ticks), np.max(self.x_ticks)])
-    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)]) 
+    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)])
     cbar = plt.colorbar(CS, format='%.3f')
     plt.title("Estimate Combo Score")
     plt.xlabel("X (km)")
-    plt.ylabel("Y (km)") 
+    plt.ylabel("Y (km)")
     cbar.set_label(self.science_variable_type + " combo score")
     ax.axis('scaled')
 

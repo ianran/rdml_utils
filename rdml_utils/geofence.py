@@ -35,8 +35,8 @@ class Geofence(object):
       east_bound = bounds[2]
       west_bound = bounds[3]
     else:
-      print "[GEOFENCE] Error: Could not parse vertices"
-  
+      print( "[GEOFENCE] Error: Could not parse vertices" )
+
     vertices = [Location(ylat=north_bound, xlon=east_bound), Location(ylat=north_bound, xlon=west_bound), Location(ylat=south_bound, xlon=west_bound), Location(ylat=south_bound, xlon=east_bound)]
     return cls(vertices)
 
@@ -54,8 +54,8 @@ class Geofence(object):
     elif isinstance(pt, list):
       lat = pt[1]
       lon = pt[0]
-    else: 
-      print "[GEOFENCE] Error: Could not parse point"
+    else:
+      print( "[GEOFENCE] Error: Could not parse point" )
 
     if self.fence is None:
       return True
