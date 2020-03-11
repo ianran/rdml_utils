@@ -95,7 +95,7 @@ class LocDelta(object):
     if (angle_units.lower() == "radians") or (angle_units.lower() == "rad"):
       dx = r*math.cos(theta)
       dy = r*math.sin(theta)
-    elif (angle_units.lower() == "degrees") or (angle_units.lower() == "deg"): 
+    elif (angle_units.lower() == "degrees") or (angle_units.lower() == "deg"):
       dx = r*math.cos(math.radians(theta))
       dy = r*math.sin(math.radians(theta))
     return cls(d_ylat=dy, d_xlon=dx)
@@ -141,14 +141,14 @@ class LocDelta(object):
   def dotProduct(self, other):
     if isinstance(other, LocDelta):
       return (self.d_xlon*other.d_xlon) + (self.d_ylat * other.d_ylat)
-    return 
+    return
 
   def getMagnitude(self):
     return math.sqrt((self.d_xlon**2)+(self.d_ylat**2))
 
   def getUnit(self):
     if self.getMagnitude() == 0:
-      raise ValueError, "Cannot compute unit vector of 0 length" 
+      raise ValueError("Cannot compute unit vector of 0 length") 
     else:
       return self/self.getMagnitude()
 
@@ -162,8 +162,8 @@ class LocDelta(object):
   def perpindicular(self):
     return LocDelta(d_xlon = self.d_ylat, d_ylat = -self.d_xlon)
 
-  
-    
+
+
 class Observation(object):
   """docstring for Observation"""
   def __init__(self, loc, data, time=None):
@@ -184,4 +184,3 @@ class Observation(object):
   def updateLoc(self, new_loc):
       self.loc = new_loc
       return self
-

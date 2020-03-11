@@ -197,7 +197,7 @@ def getMoneteryROMS(start_date, end_date, datafile_path):
         files.append(file_path)
         dates.append(dt)
         # print url
-        print file_path
+        print( file_path )
       except IOError:
         pass
       print( dt, "\tNo Data" )
