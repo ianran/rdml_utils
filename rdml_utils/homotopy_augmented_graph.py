@@ -7,8 +7,8 @@ import numpy as np
 from matplotlib import collections as mc
 from scipy.spatial import Delaunay
 from .location import Location
-from h_signature import HSignature
-from utils import samplePoints, QueueSet, euclideanDist
+from .h_signature import HSignature
+from .utils import samplePoints, QueueSet, euclideanDist
 
 
 

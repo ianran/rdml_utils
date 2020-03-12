@@ -1,10 +1,10 @@
-from gp_world_model import GPStaticWorldModel, GPTimeVaryingWorldModel, GPComboTimeVaryingWorldModel
+from .gp_world_model import GPStaticWorldModel, GPTimeVaryingWorldModel, GPComboTimeVaryingWorldModel
 from scipy.interpolate import griddata, RegularGridInterpolator
 import numpy as np
 import pdb, datetime, itertools, random, time, os, math
-from location import Observation, Location, LocDelta
-from utils import initializeNovelty, getBox, normalizeField
-from world import World
+from .location import Observation, Location, LocDelta
+from .utils import initializeNovelty, getBox, normalizeField
+from .world import World
 from collections import OrderedDict
 import deepdish as dd
 import matplotlib.pyplot as plt

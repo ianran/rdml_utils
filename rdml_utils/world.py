@@ -10,9 +10,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import RegularGridInterpolator, interp2d, griddata, RectBivariateSpline
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
-from location import Location, Observation, LocDelta
-from utils import dateLinspace, dateRange, getBox, getLatLon
-from roms import getROMSData, reshapeROMS
+from .location import Location, Observation, LocDelta
+from .utils import dateLinspace, dateRange, getBox, getLatLon
+from .roms import getROMSData, reshapeROMS
 
 
 

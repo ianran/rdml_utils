@@ -17,7 +17,7 @@ import matplotlib.image as mpimg
 import cv2 as cv
 #from matplotlib.mlab import bivariate_normal
 
-from location import Location, Observation, StampedLocation
+from .location import Location, Observation, StampedLocation
 
 
 ####################################
