@@ -27,7 +27,7 @@ class World(object):
 
     self.scalar_fields = [field.data for field in scalar_fields]  # Shape (X_ticks, y_ticks, t_ticks)
 
-    if scalar_fields[0].mask == False:
+    if not hasattr(scalar_fields[0].mask, '__len__') and scalar_fields[0].mask == False:
       self.obstacle_field = np.zeros(self.scalar_fields[0].shape)
     else:
       self.obstacle_field = scalar_fields[0].mask  # Shape (X_ticks, y_ticks, t_ticks) 0 = Not obstacle pixel, 1 = obstacle pixel
