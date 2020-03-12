@@ -1,6 +1,7 @@
 from .location import Location, Observation, LocDelta, StampedLocation
 from .gp_world_model import GPWorldModel, GPStaticWorldModel, GPTimeVaryingWorldModel, GPComboTimeVaryingWorldModel
 from .robot import Robot, loadRobots, fixedLoadRobots
+from .roms import getROMSData, reshapeROMS, getMoneteryROMS
 from .world_estimate import WorldEstimate
 from .world import World, loadWorld
 from .obstacle import Obstacle, DynamicObstacle, loadObstacles

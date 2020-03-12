@@ -1,6 +1,6 @@
 
-from location import Location, LocDelta
-from utils import euclideanDist, distanceToPoly, distanceToSegment
+from .location import Location, LocDelta
+from .utils import euclideanDist, distanceToPoly, distanceToSegment
 
 from scipy.spatial import ConvexHull
 import matplotlib.path as pth

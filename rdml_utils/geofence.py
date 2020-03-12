@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import ConvexHull
 import matplotlib.path as pth
-from location import Location, StampedLocation
+from .location import Location, StampedLocation
 
 import pdb
 

@@ -3,7 +3,7 @@ import pdb, numbers, math, haversine, time
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sas_utils import Location, LocDelta
+from .location import Location, LocDelta
 import oyaml as yaml
 
 class CoordTransformer(object):

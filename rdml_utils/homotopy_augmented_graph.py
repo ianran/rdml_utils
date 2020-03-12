@@ -6,10 +6,10 @@ import numpy as np
 
 from matplotlib import collections as mc
 from scipy.spatial import Delaunay
-from rdml_utils import Location, euclideanDist
-
+from .location import Location
 from h_signature import HSignature
-from utils import samplePoints, QueueSet
+from utils import samplePoints, QueueSet, euclideanDist
+
 
 
 class HomotopyAugmentedVertex:
@@ -26,9 +26,9 @@ class HomotopyAugmentedVertex:
     return (self.loc.asTuple(), self.h_sig.signature)
 
   def __str__(self):
-    return "Vertex ID: %s\n\tBase ID: %s\n\tLocation: %s\n\tH-Signature: %s" % (self.id, 
-                                                                                self.base_id, 
-                                                                                self.loc, 
+    return "Vertex ID: %s\n\tBase ID: %s\n\tLocation: %s\n\tH-Signature: %s" % (self.id,
+                                                                                self.base_id,
+                                                                                self.loc,
                                                                                 self.h_sig)
 
 class HomotopyAugmentedEdge(object):
@@ -39,10 +39,10 @@ class HomotopyAugmentedEdge(object):
 
 
   def __str__(self):
-    return "Vertex1:\n\tID: %s\n\tLoc: %s\n\tH-sig: %s\nVertex1:\n\tID: %s\n\tLoc: %s\n\tH-sig: %s" % (self.v1.id, 
+    return "Vertex1:\n\tID: %s\n\tLoc: %s\n\tH-sig: %s\nVertex1:\n\tID: %s\n\tLoc: %s\n\tH-sig: %s" % (self.v1.id,
                                                                                                        self.v1.loc,
                                                                                                        self.v1.h_sig,
-                                                                                                       self.v2.id, 
+                                                                                                       self.v2.id,
                                                                                                        self.v2.loc,
                                                                                                        self.v2.h_sig)
 
@@ -76,12 +76,12 @@ class HomotopyAugmentedGraph:
     img_height, img_width = map_img.shape[:2]
 
     gray_img = cv2.cvtColor(map_img, cv2.COLOR_BGR2GRAY)
-    
+
     _, thresh = cv2.threshold(gray_img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     _, labeled_img = cv2.connectedComponents(255-thresh, 4, cv2.CV_32S)
 
     rep_pts = [samplePoints(labeled_img == label, 1)[0] for label in np.unique(labeled_img) if np.sum((labeled_img == label) * thresh) == 0]
-    
+
     sampled_pts = samplePoints(gray_img, 100)
 
 
@@ -127,14 +127,14 @@ class HomotopyAugmentedGraph:
     while not open_set.empty():
       current_vertex = open_set.pop()
       neighbors = np.nonzero(self.base_graph_connectivity[current_vertex.base_id])[0]
-      
+
       for neighbor in neighbors:
         #compute h_sig from current vertex to neighbors
         neighbor_vertex_loc = self.base_graph_vertices[neighbor]
 
         h_sig = HSignature.fromPath([current_vertex.loc, neighbor_vertex_loc], self.rep_pts)
         d_dist = euclideanDist(neighbor_vertex_loc, current_vertex.loc)
-        
+
         if (current_vertex.dist + d_dist) <= budget:
           neighbor_h_sig = current_vertex.h_sig + h_sig
 
@@ -153,7 +153,7 @@ class HomotopyAugmentedGraph:
                 assert len(self.homotopy_vertices) == self.num_vertices
               except:
                 pdb.set_trace()
-            else: 
+            else:
               graph_vertex = self.homotopy_vertices[new_vertex_key]
               self.addEdge(self.num_edges, graph_vertex, current_vertex)
 
@@ -232,7 +232,7 @@ class HomotopyAugmentedGraph:
 #     res = []
 #     for e in point.edges:
 #       res.append(self.vertices[e])
-    
+
 #     return res
 
 # def getBestPoint(open_set, goal_loc, vertex_costs):
@@ -276,7 +276,7 @@ class HomotopyAugmentedGraph:
 
 #     for node_id, node in enumerate(path[1:]):
 #       prev_node = path[node_id]
-#       path_len = path_len + dist(prev_node.loc, node.loc) 
+#       path_len = path_len + dist(prev_node.loc, node.loc)
 #     return path_len
 
 # def buildDistMat(inspection_locs, h_graph):
@@ -288,17 +288,17 @@ class HomotopyAugmentedGraph:
 #     h_sigs = []
 #     for vert in h_graph.vertices:
 #       if all([x == y for (x,y) in zip(loc, vert[0])]):
-#         h_sigs.append(vert[1]) 
+#         h_sigs.append(vert[1])
 #     locs[loc] = h_sigs
 
 #   print "Num Locs", len(locs)
 
 #   loc_ids = locs.keys()
-  
+
 #   #for loc in locs:
 #   for ii in range(len(loc_ids)):
 #     print "Loc1:", ii
-#     loc = loc_ids[ii]   
+#     loc = loc_ids[ii]
 #     h_sigs = locs[loc]
 #     for jj in range(ii, len(loc_ids)):
 #       print "Loc2:", jj
@@ -358,7 +358,7 @@ class HomotopyAugmentedGraph:
 #     cv2.circle(prm_graph_img, pt, 3, (0, 0, 255), -1)
 
 #   for pt in h_path:
-#     cv2.circle(prm_graph_img, pt.loc, 2, (0, 0, 0), -1) 
+#     cv2.circle(prm_graph_img, pt.loc, 2, (0, 0, 0), -1)
 
 #   cv2.circle(prm_graph_img, h_path[0].loc, 4, (0, 255, 0), -1)
 #   cv2.circle(prm_graph_img, h_path[-1].loc, 4, (0, 0, 255), -1)
@@ -370,17 +370,8 @@ class HomotopyAugmentedGraph:
 
 
 
-     
+
 
 
 if __name__ == '__main__':
   main()
-
-
-
-
-
-
-
-
-

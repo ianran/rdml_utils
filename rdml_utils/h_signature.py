@@ -1,7 +1,7 @@
 
 import pdb, time
-from rdml_utils import Location
-from utils import rayIntersection
+from .location import Location
+from .utils import rayIntersection
 
 class HSignature(object):
   def __init__(self, signature):
@@ -12,7 +12,7 @@ class HSignature(object):
     self.signature = tuple(-1*item for item in self.signature)
 
   def isLooping(self):
-    # Return True if there is a loop in the H signature 
+    # Return True if there is a loop in the H signature
     return not len(set(self.signature)) == len(self.signature)
 
   def reduce(self):
@@ -35,10 +35,10 @@ class HSignature(object):
 
     if l_self == l_other:
       return self == other
-    
+
     elif l_self > l_other:
       return self.signature[:l_self] == other.signature
-    
+
     else:
       return False
 
@@ -71,7 +71,7 @@ class HSignature(object):
   @classmethod
   def fromPath(cls, path, representative_pts):
     h_sig = ()
-    
+
     # Sorted representitive points from left to right
     sorted_named_rep_pts = list(enumerate(sorted(representative_pts, key=lambda pt: pt.x)))
 
@@ -81,8 +81,8 @@ class HSignature(object):
         for pt_idx, rep_pt in sorted_named_rep_pts:
           if rayIntersection(segment, rep_pt):
             h_sig += (pt_idx+1,)
-      else: 
-        segment = [p2, p1] 
+      else:
+        segment = [p2, p1]
         for pt_idx, rep_pt in sorted_named_rep_pts[::-1]:
           if p1.x > p2.x: # if the segment goes from right to left, it is a negative crossing
             if rayIntersection(segment, rep_pt):
@@ -96,5 +96,3 @@ if __name__ == '__main__':
   ref_pts = [Location(xlon=0.25, ylat=-1.), Location(xlon=0.75, ylat=-1.), Location(xlon=1.5, ylat=-1.)]
 
   foo = HSignature.fromPath(path, ref_pts)
-
-

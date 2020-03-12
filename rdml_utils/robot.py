@@ -1,7 +1,7 @@
 import numpy as np
 import os, pdb, math, time
-from location import Location, LocDelta, StampedLocation
-from utils import robotLocFromPlan, euclideanDist
+from .location import Location, LocDelta, StampedLocation
+from .utils import robotLocFromPlan, euclideanDist
 
 class Robot(object):
 

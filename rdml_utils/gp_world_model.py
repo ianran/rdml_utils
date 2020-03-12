@@ -3,9 +3,10 @@ import pdb, GPy, itertools, numbers, time
 
 import numpy as np
 from scipy.interpolate import NearestNDInterpolator
-from roms import getROMSData
-from utils import getFencedData
-from location import Location, Observation
+
+from .utils import getFencedData
+from .roms import getROMSData
+from .location import Location, Observation
 import deepdish as dd
 import matplotlib.pyplot as plt
 
@@ -56,7 +57,7 @@ class GPStaticWorldModel(GPWorldModel):
     self.gp_x = np.array([[x.loc.lon, x.loc.lat] for x in obs])
     self.gp_y = np.array([x.data for x in obs])
     self.prior_y = np.array([self.getPriorPoint([x.loc.lon, x.loc.lat, x.time]) for x in obs])
-    
+
     self.gp_y = np.reshape(self.gp_y - self.prior_y, (len(self.gp_y), -1))
 
     GPWorldModel.__init__(self, 2, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=sparse, num_inducing=num_inducing)
@@ -76,9 +77,9 @@ class GPStaticWorldModel(GPWorldModel):
 
     prediction_mean = np.array(zz[0]).reshape(shape)
     prediction_variance = np.array(zz[1]).reshape(shape)
-    
+
     prior_prediction_mean = self.getPriorMean(x_ticks, y_ticks)
-    estimate = prediction_mean + prior_prediction_mean 
+    estimate = prediction_mean + prior_prediction_mean
 
     return estimate, prediction_variance
 
@@ -99,14 +100,14 @@ class GPTimeVaryingWorldModel(GPWorldModel):
 
     GPWorldModel.__init__(self, 3, self.gp_x, self.gp_y, gp_initial_variance, gp_length_scales, gp_mean, use_sparse_gp=sparse, num_inducing=num_inducing)
 
-  
+
   def queryPoint(self, lon, lat, time=0.0):
     #assumes Lon, Lat, Time
     query_point = [lon, lat, Time]
     return self.queryGPPoint(query_point)
 
   def getGPModel(self, query_time, x_ticks, y_ticks):
-    # Query the GP Model to get the Mean and Variance Estimates 
+    # Query the GP Model to get the Mean and Variance Estimates
     shape = (len(x_ticks), len(y_ticks))
 
     query = np.array(list(itertools.product(x_ticks, y_ticks)))
@@ -117,8 +118,8 @@ class GPTimeVaryingWorldModel(GPWorldModel):
     prediction_mean = np.array(zz[0]).reshape(shape)
     prediction_variance = np.array(zz[1]).reshape(shape)
     prior_prediction_mean = self.getPriorMean(x_ticks, y_ticks)
-    
-    estimate = prediction_mean + prior_prediction_mean 
+
+    estimate = prediction_mean + prior_prediction_mean
 
     return estimate, prediction_variance
 
@@ -135,14 +136,14 @@ class GPComboTimeVaryingWorldModel(GPWorldModel):
 
     pts       = np.array([[o.loc.lon, o.loc.lat] for o in filtered_obs])
     data      = np.array([o.data for o in filtered_obs])
-   
+
     nearestInterp = NearestNDInterpolator(pts, data)
-   
-    psuedo_obs_x = np.linspace(x_ticks[0], x_ticks[-1], 10) 
-    psuedo_obs_y = np.linspace(y_ticks[0], y_ticks[-1], 10) 
+
+    psuedo_obs_x = np.linspace(x_ticks[0], x_ticks[-1], 10)
+    psuedo_obs_y = np.linspace(y_ticks[0], y_ticks[-1], 10)
 
     q_pts = np.array([coord for coord in itertools.product(psuedo_obs_x, psuedo_obs_y)])
-    
+
     pseudo_obs = nearestInterp(q_pts)
     pseudo_obs = [Observation(Location(xlon=pt[0], ylat=pt[1]), data=o, time=0.0) for pt, o in zip(q_pts, pseudo_obs)]
 
@@ -166,7 +167,7 @@ class GPComboTimeVaryingWorldModel(GPWorldModel):
     return self.queryGPPoint(query_point)
 
   def getGPModel(self, query_time, x_ticks, y_ticks):
-    # Query the GP Model to get the Mean and Variance Estimates 
+    # Query the GP Model to get the Mean and Variance Estimates
     shape = (len(x_ticks), len(y_ticks))
 
     query = np.array(list(itertools.product(x_ticks, y_ticks)))
@@ -177,7 +178,7 @@ class GPComboTimeVaryingWorldModel(GPWorldModel):
     prediction_mean = np.array(zz[0]).reshape(shape)
     prediction_variance = np.array(zz[1]).reshape(shape)
     prior_prediction_mean = self.getPriorMean(x_ticks, y_ticks)
-    
-    estimate = prediction_mean + prior_prediction_mean 
+
+    estimate = prediction_mean + prior_prediction_mean
 
     return estimate, prediction_variance
