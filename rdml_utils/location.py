@@ -126,6 +126,11 @@ class LocDelta(object):
     if isinstance(other, float) or isinstance(other, int):
       return LocDelta(self.d_ylat/float(other),self.d_xlon/float(other))
 
+  # multple truediv from __div__ because python 3 requires it.
+  def __truediv__(self, other):
+    if isinstance(other, float) or isinstance(other, int):
+      return LocDelta(self.d_ylat/float(other),self.d_xlon/float(other))
+
   def __eq__(self, other):
     if isinstance(other, LocDelta):
       return (abs(self.d_ylat - other.d_ylat) < 1e-6) and (abs(self.d_xlon - other.d_xlon) < 1e-6)
@@ -148,7 +153,7 @@ class LocDelta(object):
 
   def getUnit(self):
     if self.getMagnitude() == 0:
-      raise ValueError("Cannot compute unit vector of 0 length") 
+      raise ValueError("Cannot compute unit vector of 0 length")
     else:
       return self/self.getMagnitude()
 
