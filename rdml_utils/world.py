@@ -19,18 +19,28 @@ from .roms import getROMSData, reshapeROMS
 class World(object):
 
   """docstring for World"""
-  def __init__(self, sci_types, scalar_fields, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
-    if isinstance(sci_types, list):
-        self.science_variable_types = sci_types
+  def __init__(self, sci_type, scalar_field, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
+    if isinstance(sci_type, list):
+        self.science_variable_types = sci_type
     else:
-        self.science_variable_types = [sci_types]
+        self.science_variable_types = [sci_type]
 
-    self.scalar_fields = [field.data for field in scalar_fields]  # Shape (X_ticks, y_ticks, t_ticks)
-
-    if not hasattr(scalar_fields[0].mask, '__len__') and scalar_fields[0].mask == False:
-      self.obstacle_field = np.zeros(self.scalar_fields[0].shape)
+    if isinstance(scalar_field, list):
+        self.scalar_fields = scalar_field
+        scalar_field = scalar_field[0]
     else:
-      self.obstacle_field = scalar_fields[0].mask  # Shape (X_ticks, y_ticks, t_ticks) 0 = Not obstacle pixel, 1 = obstacle pixel
+        self.scalar_fields = [scalar_field]
+    self.scalar_field = self.scalar_fields[0]
+
+    if isinstance(scalar_field, np.ma.core.MaskedArray):
+      self.scalar_field = scalar_field.data  # Shape (X_ticks, y_ticks, t_ticks)
+      self.obstacle_field = scalar_field.mask  # Shape (X_ticks, y_ticks, t_ticks) 0 = Not obstacle pixel, 1 = obstacle pixel
+    elif isinstance(scalar_field, np.ndarray):
+      self.scalar_field = scalar_field
+      self.obstacle_field = np.zeros(self.scalar_field.shape)
+
+    if isinstance(self.obstacle_field, np.bool_) and self.obstacle_field == False:
+      self.obstacle_field = np.zeros(self.scalar_field.shape)
 
     self.current_u_field = current_u_field
     self.current_v_field = current_v_field
@@ -464,7 +474,7 @@ class World(object):
     u_field = np.ma.masked_greater(u_field, float('inf'))
     v_field = np.ma.masked_greater(v_field, float('inf'))
 
-    return cls(['temperature'], [scalar_field], u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
+    return cls('temperature', scalar_field**2, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
 
 
   @classmethod
@@ -529,8 +539,8 @@ class World(object):
     e_bound   = bounds[2]
     w_bound   = bounds[3]
 
-    x_ticks   = np.arange(0.0, xlen+resolution[0], resolution[0])
-    y_ticks   = np.arange(0.0, ylen+resolution[1], resolution[1])
+    x_ticks   = np.arange(0.0, xlen+(resolution[0]/2.), resolution[0])
+    y_ticks   = np.arange(0.0, ylen+(resolution[1]/2.), resolution[1])
 
     x_ticks = x_ticks - np.max(x_ticks)/2.
     y_ticks = y_ticks - np.max(y_ticks)/2.

@@ -188,6 +188,7 @@ def getMoneteryROMS(start_date, end_date, datafile_path):
   for dt in dateRange(start_date, end_date, datetime.timedelta(hours=1)):
     filename = "ca300m_das_%04d%02d%02d%02d.nc" % (dt.year, dt.month, dt.day, dt.hour)
     url = "http://west.rssoffice.com:8080/thredds/fileServer/roms/CA300m-nowcast/" + filename
+    print(url)
     file_path = datafile_path + filename
     if not os.path.isfile(file_path):
       try:
@@ -212,7 +213,9 @@ def getMoneteryROMS(start_date, end_date, datafile_path):
 
 
 if __name__ == '__main__':
-  d1 = datetime.datetime(2018, 1, 1)
-  d2 = datetime.datetime(2018, 1, 3)
+  d1 = datetime.datetime(2017, 1, 1)
+  d2 = datetime.datetime(2017, 1, 3)
 
   getMoneteryROMS(d1, d2, os.path.expandvars("$HOME/Desktop/"))
+
+  # http://west.rssoffice.com:8080/thredds/fileServer/roms/CA300m-nowcast/ca300m_das_2017010415.nc
