@@ -85,6 +85,64 @@ class PriorityQueueSet(QueueSet):
     self.queue_set.remove(item)
     return item
 
+class State():
+
+  def __init__(self, loc=Location(0,0), heading=0.0, goal=None):
+
+    self.loc = loc
+    self.heading = heading
+    self.goal = goal
+
+  @classmethod
+  def fromTuple(cls, tup):
+    return cls(loc=Location(xlon=tup[0], ylat=tup[1]), heading=tup[2], goal=tup[3])
+
+  def __str__(self):
+    return "Location: " + str(self.loc) + " Heading: %d" % self.heading + " Goal: %d" % self.goal
+
+  def asTuple(self):
+    return (self.loc.x, self.loc.y, self.heading, self.goal)
+
+  def asTupleNoGoal(self):
+    return (self.loc.x, self.loc.y, self.heading)
+
+class genState():
+
+  def __init__(self, d_cur, t_cur, d_next, t_next, g_index):
+    self.d_cur = d_cur
+    self.t_cur = t_cur
+    self.d_next = d_next
+    self.t_next = t_next
+    self.g_index = g_index
+
+  @classmethod
+  def fromTuple(cls, tup):
+    return cls(tup[0], tup[1], tup[2], tup[3], tup[4])
+
+  @classmethod
+  def fromLoc(cls, loc, goal_list, g_index, cur_h=0.0):
+    if g_index < len(goal_list):
+      d_cur = (loc - goal_list[g_index]).getMagnitude()
+      t_cur = headingBetLocs(loc, goal_list[g_index]) - cur_h
+      if g_index+1 < len(goal_list):
+        d_next = (loc - goal_list[g_index+1]).getMagnitude()
+        t_next = headingBetLocs(loc, goal_list[g_index+1]) - cur_h
+      else:
+        d_next = d_cur
+        t_next = t_cur
+      return cls(d_cur, t_cur, d_next, t_next, g_index)
+    else:
+      return None
+
+  def asTuple(self):
+    return (self.d_cur, self.t_cur, self.d_next, self.t_next, self.g_index)
+
+  def asTupleNoGoal(self):
+    return (self.d_cur, self.t_cur, self.d_next, self.t_next)
+
+  def __str__(self):
+    return str(self.asTuple())
+
 ####################################
 ## Utility Functions
 ####################################
@@ -755,6 +813,14 @@ def findPtInContour(contour, height, width, res):
       else:
         pt[0] = pt[0] + .5
         return tuple(pt)
+
+def state2Dis(state, tree):
+
+  if state is not None:
+    nn = tree.query(state.asTupleNoGoal())
+    return tuple(tree.data[nn[1]])
+  else:
+    return None
 
 if __name__ == '__main__':
   p1 = Location(0, 0)
