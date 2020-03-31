@@ -41,7 +41,7 @@ class Policy(object):
 
         return act[0]
 
-class policySim(object):
+class PolicySim(object):
 
     def __init__(self, max_iter_num, radius, move_noise, turn_noise, scale):
 
