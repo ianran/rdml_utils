@@ -54,40 +54,40 @@ class PolicySim(object):
 
     def runSim(self, policy, boat, goals):
 
-    g_index = 0
-    step_num = 0
-    end = False
+        g_index = 0
+        step_num = 0
+        end = False
 
-    path = [boat.loc]
+        path = [boat.loc]
 
-    while(step_num < self.max_iter_num and not end):
+        while(step_num < self.max_iter_num and not end):
 
-        action = policy.getAction(boat, goals, g_index)
-        g_index += action
+            action = policy.getAction(boat, goals, g_index)
+            g_index += action
 
-        if g_index < 0:
-            g_index = 0
+            if g_index < 0:
+                g_index = 0
 
-        if g_index < len(goals):
+            if g_index < len(goals):
 
-            u = boat.calControl(goals[g_index], self.radius)
+                u = boat.calControl(goals[g_index], self.radius)
 
-            if u is not None:
-                x_vel, y_vel, theta_vel = boat.calVels(u)
+                if u is not None:
+                    x_vel, y_vel, theta_vel = boat.calVels(u)
+                else:
+                    g_index += 1
+                    x_vel, y_vel, theta_vel = boat.calVels(0.0)
+                    if g_index >= len(goals):
+                        end = True
+
+                boat.step(x_vel, y_vel, theta_vel, self.move_noise, self.turn_noise, scale=self.scale)
+                path.append(boat.loc)
+
+                step_num += 1
+                if g_index == (len(goals)-1):
+                    end = not (self.radius < (boat.loc - goals[g_index]).getMagnitude())
+
             else:
-                g_index += 1
-                x_vel, y_vel, theta_vel = boat.calVels(0.0)
-                if g_index >= len(goals):
-                    end = True
+                end = True
 
-            boat.step(x_vel, y_vel, theta_vel, self.move_noise, self.turn_noise, scale=self.scale)
-            path.append(boat.loc)
-
-            step_num += 1
-            if g_index == (len(goals)-1):
-                end = not (self.radius < (boat.loc - goals[g_index]).getMagnitude())
-
-        else:
-            end = True
-
-    return path
+        return path
