@@ -16,7 +16,7 @@ class Policy(object):
 
     # Function to build a kd_tree from given range of distances and heading and thier discritization levels
     def buildKDTree(self, d, t, d_level, t_level):
-        d_c, t_c, d_n, t_n = np.mgrid[d[0]:d[1]:d_level, h[0]:h[1]:t_level, d[0]:d[1]:d_level, h[0]:h[1]:t_level]
+        d_c, t_c, d_n, t_n = np.mgrid[d[0]:d[1]:d_level, t[0]:t[1]:t_level, d[0]:d[1]:d_level, t[0]:t[1]:t_level]
         return spatial.KDTree(zip(d_c.ravel(), t_c.ravel(), d_n.ravel(), t_n.ravel()))
 
     # Function to load a policy from a given pickle file
