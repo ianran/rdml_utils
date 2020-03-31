@@ -2,6 +2,7 @@
 
 from scipy import spatial
 import os
+import numpy as np
 
 from utils import genState, state2Dis
 
