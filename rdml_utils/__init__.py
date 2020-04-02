@@ -10,3 +10,4 @@ from .utils import *
 from .h_signature import HSignature
 from .homotopy_augmented_graph import HomotopyAugmentedGraph
 from .policy import Policy, PolicySim
+from .boat import Boat
