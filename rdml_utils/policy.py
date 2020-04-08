@@ -31,7 +31,7 @@ class Policy(object):
 
     # Given a boat, goals, and current goal index return the desired action
     def getAction(self, boat, goal_list, goal_index):
-        pdb.set_trace()
+        # pdb.set_trace()
         dis_state = state2Dis(genState.fromLoc(boat.loc, goal_list, goal_index, cur_h=boat.theta), self.kd_tree)
         s = genState.fromTuple(dis_state + (goal_index,))
 

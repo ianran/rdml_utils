@@ -147,6 +147,10 @@ class genState():
 ## Utility Functions
 ####################################
 
+def headingBetLocs(loc1, loc2):
+  d = loc2 - loc1
+  return math.atan2(d.d_ylat, d.d_xlon)
+
 def getBox(xlen, ylen, center):
   # Given center point (coords), size in km, return bounds (coords)
   n_bound = getLatLon(center, ylen/2., 'north').lat
