@@ -6,6 +6,7 @@ import numpy as np
 import pdb
 
 from utils import genState, state2Dis
+from location import Location, LocDelta
 
 class Policy(object):
 
