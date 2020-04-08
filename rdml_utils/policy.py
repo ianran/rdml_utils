@@ -29,8 +29,8 @@ class Policy(object):
 
     # Given a boat, goals, and current goal index return the desired action
     def getAction(self, boat, goal_list, goal_index):
-        dis_state = state2Dis(genState.fromLoc(boat.loc, goal_list, g_index, cur_h=boat.theta), self.kd_tree)
-        s = genState.fromTuple(dis_state + (g_index,))
+        dis_state = state2Dis(genState.fromLoc(boat.loc, goal_list, goal_index, cur_h=boat.theta), self.kd_tree)
+        s = genState.fromTuple(dis_state + (goal_index,))
 
         if s.asTupleNoGoal() not in self.policy.keys():
             s_t = min(self.policy.keys(), key=lambda x: abs(s.d_cur - x[0]) + abs(s.t_cur - x[1]) + abs(s.d_next - x[2]) + abs(s.t_next  - x[3]))
