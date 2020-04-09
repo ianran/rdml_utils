@@ -4,6 +4,7 @@ from scipy import spatial
 import os
 import numpy as np
 import pdb
+import pickle
 
 from utils import genState, state2Dis
 from location import Location, LocDelta
