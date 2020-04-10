@@ -59,7 +59,6 @@ class World(object):
   def __repr__(self):
     return "World Class Object"
 
-
   def isObstacle(self, query_loc, loc_type='xy'):
     if not self.withinBounds(query_loc, loc_type):
       return True

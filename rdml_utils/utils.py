@@ -206,38 +206,36 @@ def ptInList(pt, l):
   return np.any(np.all(l == pt, axis=1))
 
 
-def findMax(z):
-  neighborhood_size = 5
-
+def findMax(z, neighborhood_size=5):
   data_max = filters.maximum_filter(z, neighborhood_size)
   maxima = (z == data_max)
   labeled, num_objects = ndimage.label(maxima)
   slices = ndimage.find_objects(labeled)
-  max_x, max_y = [], []
-  for dy,dx in slices:
+  res = []
+  # for dy, dx in slices: # This is the old version
+  for dx, dy in slices: 
     x_center = (dx.start + dx.stop - 1)/2
-    max_x.append(x_center)
     y_center = (dy.start + dy.stop - 1)/2   
-    max_y.append(y_center)
+    
+    res.append(Location(ylat=y_center, xlon=x_center))
 
-  return max_x, max_y
+  return res
 
 
-def findMin(z):
-  neighborhood_size = 5
-
+def findMin(z, neighborhood_size=5):
   data_min = filters.minimum_filter(z, neighborhood_size)
   minima = (z == data_min)
   labeled, num_objects = ndimage.label(minima)
   slices = ndimage.find_objects(labeled)
-  min_x, min_y = [], []
-  for dy,dx in slices:
+  res = []
+  # for dy, dx in slices: # This is the old version
+  for dx, dy in slices:
     x_center = (dx.start + dx.stop - 1)/2
-    min_x.append(x_center)
     y_center = (dy.start + dy.stop - 1)/2   
-    min_y.append(y_center)
+    
+    res.append(Location(ylat=y_center, xlon=x_center))
 
-  return min_x, min_y
+  return res
 
 
 
@@ -259,7 +257,7 @@ def getNeighbors(loc, mat, step_size=1):
     query_loc = map(operator.add, loc, t)
     if isFree(query_loc, mat):
       neighbors.append(map(operator.add, loc, t))
-  return neighbors
+  return map(tuple, neighbors)
 
 
 
