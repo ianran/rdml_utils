@@ -1,4 +1,4 @@
-import pdb, copy, random, cv2, itertools
+import pdb, copy, random, cv2, itertools, sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,9 +6,18 @@ import numpy as np
 
 from matplotlib import collections as mc
 from scipy.spatial import Delaunay
-from .location import Location
-from .h_signature import HSignature
-from .utils import samplePoints, QueueSet, euclideanDist
+
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location
+    from h_signature import HSignature
+    from utils import samplePoints, QueueSet, euclideanDist
+else:
+    # python 3
+    from rdml_utils.location import Location
+    from rdml_utils.h_signature import HSignature
+    from rdml_utils.utils import samplePoints, QueueSet, euclideanDist
+
 
 
 

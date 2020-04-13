@@ -1,4 +1,4 @@
-import datetime, math, urllib, os, pdb, itertools
+import datetime, math, urllib, os, pdb, itertools, sys
 from scipy.interpolate import griddata
 from tqdm import tqdm
 import netCDF4 as nc
@@ -6,7 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from .utils import dateRange
+
+
+if sys.version_info[0] < 3:
+    # python 2
+    from utils import dateRange
+else:
+    # python 3
+    from rdml_utils.utils import dateRange
+
 
 
 

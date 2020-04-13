@@ -1,12 +1,19 @@
+import pdb, math, datetime, sys
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location, LocDelta
+    from utils import euclideanDist, distanceToPoly, distanceToSegment
+else:
+    # python 3
+    from rdml_utils.location import Location, LocDelta
+    from rdml_utils.utils import euclideanDist, distanceToPoly, distanceToSegment
 
-from .location import Location, LocDelta
-from .utils import euclideanDist, distanceToPoly, distanceToSegment
 
 from scipy.spatial import ConvexHull
 import matplotlib.path as pth
 from shapely.geometry import Point, LineString, Polygon
 from shapely.ops import cascaded_union
-import pdb, math, datetime
+
 
 class Obstacle(object):
   """docstring for Obstacle"""

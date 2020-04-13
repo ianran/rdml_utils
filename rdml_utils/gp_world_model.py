@@ -1,12 +1,21 @@
 
-import pdb, GPy, itertools, numbers, time
+import pdb, GPy, itertools, numbers, time, sys
 
 import numpy as np
 from scipy.interpolate import NearestNDInterpolator
 
-from .utils import getFencedData
-from .roms import getROMSData
-from .location import Location, Observation
+
+if sys.version_info[0] < 3:
+    # python 2
+    from utils import getFencedData
+    from roms import getROMSData
+    from location import Location, Observation
+else:
+    # python 3
+    from rdml_utils.utils import getFencedData
+    from rdml_utils.roms import getROMSData
+    from rdml_utils.location import Location, Observation
+
 import deepdish as dd
 import matplotlib.pyplot as plt
 

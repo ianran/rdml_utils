@@ -1,7 +1,14 @@
 import numpy as np
-import os, pdb, math, time
-from .location import Location, LocDelta, StampedLocation
-from .utils import robotLocFromPlan, euclideanDist
+import os, pdb, math, time, sys
+
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location, LocDelta, StampedLocation
+    from utils import robotLocFromPlan, euclideanDist
+else:
+    # python 3
+    from rdml_utils.location import Location, LocDelta, StampedLocation
+    from rdml_utils.utils import robotLocFromPlan, euclideanDist
 
 class Robot(object):
 

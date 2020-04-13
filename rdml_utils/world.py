@@ -1,4 +1,4 @@
-import os, pdb, random, math, cmath, time, datetime, re
+import os, pdb, random, math, cmath, time, datetime, re, sys
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,9 +10,19 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import RegularGridInterpolator, interp2d, griddata, RectBivariateSpline
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
-from .location import Location, Observation, LocDelta
-from .utils import dateLinspace, dateRange, getBox, getLatLon
-from .roms import getROMSData, reshapeROMS
+
+
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location, Observation, LocDelta
+    from utils import dateLinspace, dateRange, getBox, getLatLon
+    from roms import getROMSData, reshapeROMS
+else:
+    # python 3
+    from rdml_utils.location import Location, Observation, LocDelta
+    from rdml_utils.utils import dateLinspace, dateRange, getBox, getLatLon
+    from rdml_utils.roms import getROMSData, reshapeROMS
+
 
 
 
@@ -68,7 +78,6 @@ class World(object):
 
   def __repr__(self):
     return "World Class Object"
-
 
   def isObstacle(self, query_loc, loc_type='xy'):
     if not self.withinBounds(query_loc, loc_type):
@@ -771,30 +780,32 @@ def loadWorld(roms_file, world_center, world_width, world_height, world_resoluti
 
 def main():
 
-  # n_bound = 29.0
-  # s_bound = 28.0
-  # e_bound = -94.0
-  # w_bound = -95.0
+  n_bound = 29.0
+  s_bound = 28.0
+  e_bound = -94.0
+  w_bound = -95.0
 
-  # bounds = [n_bound, s_bound, e_bound, w_bound]
+  bounds = [n_bound, s_bound, e_bound, w_bound]
 
-  # d1 = datetime.datetime(2018, 1, 1)
-  # d2 = datetime.datetime(2018, 1, 2)
-  # bounds = getBox(xlen = 20, ylen = 20, center = Location(0.0,0.0))
+  d1 = datetime.datetime(2018, 1, 1)
+  d2 = datetime.datetime(2018, 1, 2)
+  bounds = getBox(xlen = 20, ylen = 20, center = Location(0.0,0.0))
 
-  # wd = World.idealizedFront(
-  #   start_date      = d1,
-  #   end_date      = d2,
-  #   time_resolution   = 24,
-  #   resolution      = (0.100, 0.100),
-  #   xlen        = 15.,
-  #   ylen        = 20.,
-  # )
+  wd = World.idealizedFront(
+    start_date      = d1,
+    end_date      = d2,
+    time_resolution   = 24,
+    resolution      = (0.100, 0.100),
+    xlen        = 15.,
+    ylen        = 20.,
+  )
   # wd = World.random(d1, d2, 24, (100, 110), bounds=bounds, num_generators = 50)
-  datafile_path = os.path.dirname(os.path.realpath(__file__)) + "/../data/roms_data/"
-  datafile_name = "txla_roms/txla_hindcast_jun_1_2015.nc"
+  #datafile_path = os.path.dirname(os.path.realpath(__file__)) + "/../data/roms_data/"
+  #datafile_name = "txla_roms/txla_hindcast_jun_1_2015.nc"
 
-  wd = World.roms(datafile_path + datafile_name, 20, 20, Location(xlon=-94.25, ylat=28.25), feature=['salt'], resolution=(0.1, 0.1))
+  #wd = World.roms(datafile_path + datafile_name, 20, 20, Location(xlon=-94.25, ylat=28.25), feature=['salt'], resolution=(0.1, 0.1))
+
+
 
   print( "Generating Figures" )
 

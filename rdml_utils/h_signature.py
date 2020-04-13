@@ -1,7 +1,16 @@
 
-import pdb, time
-from .location import Location
-from .utils import rayIntersection
+import pdb, time, sys
+
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location
+    from utils import rayIntersection
+else:
+    # python 3
+    from rdml_utils.location import Location
+    from rdml_utils.utils import rayIntersection
+
+
 
 class HSignature(object):
   def __init__(self, signature):

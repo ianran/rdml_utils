@@ -1,9 +1,14 @@
+import sys, pdb
 import numpy as np
 from scipy.spatial import ConvexHull
 import matplotlib.path as pth
-from .location import Location, StampedLocation
 
-import pdb
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location, StampedLocation
+else:
+    # python 3
+    from rdml_utils.location import Location, StampedLocation
 
 class Geofence(object):
   """docstring for Geofence"""

@@ -8,16 +8,18 @@ import math, operator, datetime, pdb, haversine, os, errno, sys
 if sys.version_info[0] < 3:
     # python 2
     import Queue
+    from location import Location, Observation, StampedLocation
 else:
     # python 3
     import queue as Queue
+    from rdml_utils.location import Location, Observation, StampedLocation
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import cv2 as cv
 #from matplotlib.mlab import bivariate_normal
 
-from .location import Location, Observation, StampedLocation
+
 
 
 ####################################
@@ -91,9 +93,71 @@ class PriorityQueueSet(QueueSet):
     self.queue_set.remove(item)
     return item
 
+class State():
+
+  def __init__(self, loc=Location(0,0), heading=0.0, goal=None):
+
+    self.loc = loc
+    self.heading = heading
+    self.goal = goal
+
+  @classmethod
+  def fromTuple(cls, tup):
+    return cls(loc=Location(xlon=tup[0], ylat=tup[1]), heading=tup[2], goal=tup[3])
+
+  def __str__(self):
+    return "Location: " + str(self.loc) + " Heading: %d" % self.heading + " Goal: %d" % self.goal
+
+  def asTuple(self):
+    return (self.loc.x, self.loc.y, self.heading, self.goal)
+
+  def asTupleNoGoal(self):
+    return (self.loc.x, self.loc.y, self.heading)
+
+class genState():
+
+  def __init__(self, d_cur, t_cur, d_next, t_next, g_index):
+    self.d_cur = d_cur
+    self.t_cur = t_cur
+    self.d_next = d_next
+    self.t_next = t_next
+    self.g_index = g_index
+
+  @classmethod
+  def fromTuple(cls, tup):
+    return cls(tup[0], tup[1], tup[2], tup[3], tup[4])
+
+  @classmethod
+  def fromLoc(cls, loc, goal_list, g_index, cur_h=0.0):
+    if g_index < len(goal_list):
+      d_cur = (loc - goal_list[g_index]).getMagnitude()
+      t_cur = headingBetLocs(loc, goal_list[g_index]) - cur_h
+      if g_index+1 < len(goal_list):
+        d_next = (loc - goal_list[g_index+1]).getMagnitude()
+        t_next = headingBetLocs(loc, goal_list[g_index+1]) - cur_h
+      else:
+        d_next = d_cur
+        t_next = t_cur
+      return cls(d_cur, t_cur, d_next, t_next, g_index)
+    else:
+      return None
+
+  def asTuple(self):
+    return (self.d_cur, self.t_cur, self.d_next, self.t_next, self.g_index)
+
+  def asTupleNoGoal(self):
+    return (self.d_cur, self.t_cur, self.d_next, self.t_next)
+
+  def __str__(self):
+    return str(self.asTuple())
+
 ####################################
 ## Utility Functions
 ####################################
+
+def headingBetLocs(loc1, loc2):
+  d = loc2 - loc1
+  return math.atan2(d.d_ylat, d.d_xlon)
 
 def getBox(xlen, ylen, center):
   # Given center point (coords), size in km, return bounds (coords)
@@ -150,38 +214,36 @@ def ptInList(pt, l):
   return np.any(np.all(l == pt, axis=1))
 
 
-def findMax(z):
-  neighborhood_size = 5
-
+def findMax(z, neighborhood_size=5):
   data_max = filters.maximum_filter(z, neighborhood_size)
   maxima = (z == data_max)
   labeled, num_objects = ndimage.label(maxima)
   slices = ndimage.find_objects(labeled)
-  max_x, max_y = [], []
-  for dy,dx in slices:
+  res = []
+  # for dy, dx in slices: # This is the old version
+  for dx, dy in slices:
     x_center = (dx.start + dx.stop - 1)/2
-    max_x.append(x_center)
     y_center = (dy.start + dy.stop - 1)/2
-    max_y.append(y_center)
 
-  return max_x, max_y
+    res.append(Location(ylat=y_center, xlon=x_center))
+
+  return res
 
 
-def findMin(z):
-  neighborhood_size = 5
-
+def findMin(z, neighborhood_size=5):
   data_min = filters.minimum_filter(z, neighborhood_size)
   minima = (z == data_min)
   labeled, num_objects = ndimage.label(minima)
   slices = ndimage.find_objects(labeled)
-  min_x, min_y = [], []
-  for dy,dx in slices:
+  res = []
+  # for dy, dx in slices: # This is the old version
+  for dx, dy in slices:
     x_center = (dx.start + dx.stop - 1)/2
-    min_x.append(x_center)
     y_center = (dy.start + dy.stop - 1)/2
-    min_y.append(y_center)
 
-  return min_x, min_y
+    res.append(Location(ylat=y_center, xlon=x_center))
+
+  return res
 
 
 
@@ -203,7 +265,7 @@ def getNeighbors(loc, mat, step_size=1):
     query_loc = map(operator.add, loc, t)
     if isFree(query_loc, mat):
       neighbors.append(map(operator.add, loc, t))
-  return neighbors
+  return map(tuple, neighbors)
 
 
 
@@ -765,6 +827,14 @@ def findPtInContour(contour, height, width, res):
       else:
         pt[0] = pt[0] + .5
         return tuple(pt)
+
+def state2Dis(state, tree):
+
+  if state is not None:
+    nn = tree.query(state.asTupleNoGoal())
+    return tuple(tree.data[nn[1]])
+  else:
+    return None
 
 if __name__ == '__main__':
   p1 = Location(0, 0)

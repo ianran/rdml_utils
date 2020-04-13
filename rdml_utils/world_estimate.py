@@ -1,10 +1,21 @@
-from .gp_world_model import GPStaticWorldModel, GPTimeVaryingWorldModel, GPComboTimeVaryingWorldModel
 from scipy.interpolate import griddata, RegularGridInterpolator
 import numpy as np
-import pdb, datetime, itertools, random, time, os, math
-from .location import Observation, Location, LocDelta
-from .utils import initializeNovelty, getBox, normalizeField
-from .world import World
+import pdb, datetime, itertools, random, time, os, math, sys
+
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Observation, Location, LocDelta
+    from utils import initializeNovelty, getBox, normalizeField
+    from gp_world_model import GPStaticWorldModel, GPTimeVaryingWorldModel, GPComboTimeVaryingWorldModel
+
+
+else:
+    # python 3
+    from rdml_utils.location import Observation, Location, LocDelta
+    from rdml_utils.utils import initializeNovelty, getBox, normalizeField
+    from rdml_utils.gp_world_model import GPStaticWorldModel, GPTimeVaryingWorldModel, GPComboTimeVaryingWorldModel
+
+
 from collections import OrderedDict
 import deepdish as dd
 import matplotlib.pyplot as plt

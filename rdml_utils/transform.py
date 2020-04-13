@@ -1,9 +1,16 @@
 
-import pdb, numbers, math, haversine, time
+import pdb, numbers, math, haversine, time, sys
 
 import numpy as np
 import matplotlib.pyplot as plt
-from .location import Location, LocDelta
+
+if sys.version_info[0] < 3:
+    # python 2
+    from location import Location, LocDelta
+else:
+    # python 3
+    from rdml_utils.location import Location, LocDelta
+
 import oyaml as yaml
 
 class CoordTransformer(object):
