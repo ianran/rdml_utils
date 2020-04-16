@@ -64,6 +64,7 @@ class PolicySim(object):
         self.scale = scale
 
 
+    # If policy is none reverts to waypoint controller
     def runSim(self, policy, boat, goals):
 
         g_index = 0
@@ -74,8 +75,9 @@ class PolicySim(object):
 
         while(step_num < self.max_iter_num and not end):
 
-            action = policy.getAction(boat, goals, g_index)
-            g_index += action
+            if policy is not None:
+                action = policy.getAction(boat, goals, g_index)
+                g_index += action
 
             if g_index < 0:
                 g_index = 0
