@@ -257,9 +257,13 @@ def floodFill(mat, label, pixel):
     floodFill(mat, label, n)
 
 
-def getNeighbors(loc, mat, step_size=1):
+def getNeighbors(loc, mat, step_size=1, connectivity=4):
   #Get List of Neighbors, Ignoring ones in obstacles or ones out of bounds
-  translations = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+  if connectivity == 4:
+    translations = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+  elif connectivity == 8:
+    translations = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]
+
   neighbors = []
   for t in translations:
     query_loc = map(operator.add, loc, t)
@@ -836,26 +840,27 @@ def state2Dis(state, tree):
   else:
     return None
 
+def getLastNDim(data, ndim):
+  if data.ndim <= ndim:
+    return data
+  slc = [0] * (data.ndim - ndim)
+  slc += [slice(None)] * ndim
+  return data[tuple(slc)]
+
+
+def getFirstNDim(data, ndim):
+  if data.ndim <= ndim:
+    return data
+  slc = [slice(None)] * ndim
+  slc += [0] * (data.ndim - ndim)
+  return data[tuple(slc)]
+
 if __name__ == '__main__':
-  p1 = Location(0, 0)
-  p2 = Location(0, 1)
-  p3 = Location(1, 1)
+  foo = np.random.random((11, 22, 33, 44, 55))
 
+  for ii in range(1,9):
+    print getFirstNDim(foo, ii).shape
+    print getLastNDim(foo, ii).shape
 
-  assert distanceToSegment([p1, p2], Location(.5, .5)) == 0.5
-  assert distanceToSegment([p1, p2], Location(0, 0)) == 0
-  assert distanceToSegment([p1, p2], Location(0, 1)) == 0
-  assert distanceToSegment([p1, p2], Location(0, 2)) == 1
-  assert distanceToSegment([p1, p2], Location(-1, -1)) == math.sqrt(2)
-  assert distanceToSegment([p1, p2], Location(1, 2)) == math.sqrt(2)
-
-  assert distanceToSegment([p1, p2, p3], Location(.5, .5)) == 0.5
-  assert distanceToSegment([p1, p2, p3], Location(0, 0)) == 0
-  assert distanceToSegment([p1, p2, p3], Location(0, 1)) == 0
-  assert distanceToSegment([p1, p2, p3], Location(0, 2)) == 1
-  assert distanceToSegment([p1, p2, p3], Location(-1, -1)) == math.sqrt(2)
-  assert distanceToSegment([p1, p2, p3], Location(1, 2)) == 1
-  # center = Location(ylat = 47.72783, xlon=-122.40450)
-  # print getBox(xlen=2.5, ylen=2.5, center=center)
-
-  # print getLatLon(Location(ylat=47. + 43.197/60., xlon=-(122. + 23.938/60.)), .2, 300)
+  pdb.set_trace()
+  

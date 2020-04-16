@@ -100,6 +100,58 @@ class World(object):
       return self.obstacle_field[pt_lon_idx, pt_lat_idx, 0]
 
 
+  def loc2cell(self, loc, loc_type='xy'):
+    if loc_type == 'xy':
+      x_distances = np.abs(self.x_ticks - loc.x)
+      x_coord = np.argmin(x_distances)
+
+      y_distances = np.abs(self.y_ticks - loc.y)
+      y_coord = np.argmin(y_distances)
+
+    elif loc_type == 'latlon':
+      lat_distances = np.abs(self.lat_ticks - loc.lat)
+      y_coord = np.argmin(lat_distances)
+
+      lon_distances = np.abs(self.lon_ticks - loc.lon)
+      x_coord = np.argmin(lon_distances)
+
+    return Location(xlon=x_coord, ylat=y_coord)
+
+
+  def cell2loc(self, cell, loc_type='xy'):
+    if loc_type == 'xy':
+      if cell.x >= len(self.x_ticks):
+        x_coord = self.x_ticks[-1]
+      elif cell.x < 0:
+        x_coord = self.x_ticks[0]
+      else:
+        x_coord = self.x_ticks[int(cell.x)]
+
+      if cell.y >= len(self.y_ticks):
+        y_coord = self.y_ticks[-1]
+      elif cell.y < 0:
+        y_coord = self.y_ticks[0]
+      else:
+        y_coord = self.y_ticks[int(cell.y)]
+
+    elif loc_type == 'latlon':
+      if cell.x >= len(self.lon_ticks):
+        x_coord = self.lon_ticks[-1]
+      elif cell.x < 0:
+        x_coord = self.lon_ticks[0]
+      else:
+        x_coord = self.lon_ticks[int(cell.x)]
+
+      if cell.y >= len(self.lat_ticks):
+        y_coord = self.lat_ticks[-1]
+      elif cell.y < 0:
+        y_coord = self.lat_ticks[0]
+      else:
+        y_coord = self.lat_ticks[int(cell.y)]
+
+    return Location(xlon=x_coord, ylat=y_coord)
+
+
   def xy2latlon(self, query_xy):
     x2lon_ratio = (self.lon_ticks[1] - self.lon_ticks[0]) / (self.x_ticks[1] - self.x_ticks[0])
     y2lat_ratio = (self.lat_ticks[1] - self.lat_ticks[0]) / (self.y_ticks[1] - self.y_ticks[0])
@@ -483,7 +535,7 @@ class World(object):
     u_field = np.ma.masked_greater(u_field, float('inf'))
     v_field = np.ma.masked_greater(v_field, float('inf'))
 
-    return cls('temperature', scalar_field**2, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
+    return cls([science_variable], scalar_field**2, u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
 
 
   @classmethod
@@ -530,7 +582,7 @@ class World(object):
     u_field = np.ma.masked_greater(u_field, float('inf'))
     v_field = np.ma.masked_greater(v_field, float('inf'))
 
-    return cls(['Current Velocity'], [scalar_field], u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
+    return cls([science_variable], [scalar_field], u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
 
 
 
