@@ -203,7 +203,7 @@ class World(object):
       return True
 
 
-  def makeObservations(self, query_locs, query_times, query_type='sci', loc_type='xy'):
+  def makeObservations(self, query_locs, query_times, query_type='salinity', loc_type='xy'):
     query_times = [min(time, self.t_ticks[-1]) for time in query_times]
 
     # check through science data types and see if query type is in there.
