@@ -859,8 +859,7 @@ if __name__ == '__main__':
   foo = np.random.random((11, 22, 33, 44, 55))
 
   for ii in range(1,9):
-    print getFirstNDim(foo, ii).shape
-    print getLastNDim(foo, ii).shape
+    print (getFirstNDim(foo, ii).shape)
+    print (getLastNDim(foo, ii).shape)
 
   pdb.set_trace()
-  
