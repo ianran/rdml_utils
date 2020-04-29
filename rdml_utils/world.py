@@ -31,7 +31,6 @@ class World(object):
   """docstring for World"""
   def __init__(self, sci_type, scalar_field, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
     self.science_fields = {}
-    pdb.set_trace()
     if isinstance(sci_type, list) and isinstance(scalar_field, list):
       # Multiple Science Fields
       for science_field_type, science_field in zip(sci_type, scalar_field):
@@ -870,7 +869,7 @@ class World(object):
     bounds = wd_dict['bounds']
 
     print("Loaded World from File")
-    return cls(sci_types, sci_fields, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds)
+    return cls(list(sci_types), sci_fields, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds)
 
   def saveH5(self, file_path):
     dd.io.save(os.path.expandvars(file_path), self.__dict__, compression='zlib')
