@@ -15,12 +15,12 @@ from scipy.stats import multivariate_normal
 if sys.version_info[0] < 3:
     # python 2
     from location import Location, Observation, LocDelta
-    from utils import dateLinspace, dateRange, getBox, getLatLon
+    from utils import dateLinspace, dateRange, getBox, getLatLon, gradient2d
     from roms import getROMSData, reshapeROMS
 else:
     # python 3
     from rdml_utils.location import Location, Observation, LocDelta
-    from rdml_utils.utils import dateLinspace, dateRange, getBox, getLatLon
+    from rdml_utils.utils import dateLinspace, dateRange, getBox, getLatLon, gradient2d
     from rdml_utils.roms import getROMSData, reshapeROMS
 
 
@@ -31,7 +31,7 @@ class World(object):
   """docstring for World"""
   def __init__(self, sci_type, scalar_field, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds):
     self.science_fields = {}
-
+    pdb.set_trace()
     if isinstance(sci_type, list) and isinstance(scalar_field, list):
       # Multiple Science Fields
       for science_field_type, science_field in zip(sci_type, scalar_field):
@@ -39,7 +39,7 @@ class World(object):
         self.science_fields[science_field_type] = science_field
 
     elif isinstance(sci_type, str):
-      # Single science 
+      # Single science
       self.science_fields[sci_type] = scalar_field
 
     else:
@@ -70,8 +70,8 @@ class World(object):
     if isinstance(current_v_field, np.ma.core.MaskedArray):
       self.current_v_field = current_v_field.data  # Shape (X_ticks, y_ticks, t_ticks)
     elif isinstance(current_v_field, np.ndarray):
-      self.current_v_field = current_v_field  # Shape (X_ticks, y_ticks, t_ticks) 
-    
+      self.current_v_field = current_v_field  # Shape (X_ticks, y_ticks, t_ticks)
+
     self.x_ticks = x_ticks                          # km
     self.y_ticks = y_ticks                          # km
     self.t_ticks = t_ticks                          # UTC
@@ -599,7 +599,56 @@ class World(object):
 
     return cls([science_variable], [scalar_field], u_field, v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, world_resolution, world_resolution, bounds)
 
+  # loadWorldYaml
 
+  @classmethod
+  def loadWorldYaml(cls, yaml_world, project_path):
+    world_key = yaml_world['world_type']
+
+
+    if 'roms' in world_key:
+      roms_yaml = yaml_world[world_key]
+      wd = loadWorld(
+        roms_file = project_path + roms_yaml['roms_file'],
+        world_center = Location(ylat=roms_yaml['center_latitude'], xlon=roms_yaml['center_longitude']),
+        world_width = roms_yaml['width'],
+        world_height = roms_yaml['height'],
+        world_resolution = (roms_yaml['resolution'], roms_yaml['resolution']),
+        science_variable = roms_yaml['science_variable'],
+        save_dir = project_path + 'data/worlds/')
+
+    elif 'gyre' == world_key:
+      gyre_yaml = yaml_world[world_key]
+      wd = World.gyre(
+        world_center = Location(ylat=gyre_yaml['center_latitude'], xlon=gyre_yaml['center_longitude']),
+        world_width = gyre_yaml['width'],
+        world_height = gyre_yaml['height'],
+        world_resolution = (gyre_yaml['resolution'], gyre_yaml['resolution']),
+        science_variable = gyre_yaml['science_variable'])
+
+    elif 'random' in world_key:
+      random_yaml = yaml_world[world_key]
+      wd = World.randomHotspots(
+        world_center = Location(ylat=random_yaml['center_latitude'], xlon=random_yaml['center_longitude']),
+        world_width = random_yaml['width'],
+        world_height = random_yaml['height'],
+        world_resolution = (random_yaml['resolution'], random_yaml['resolution']),
+        science_variable = random_yaml['science_variable'])
+
+    else:
+      raise ValueError("Invalid world type %s" % world_key)
+
+
+    if yaml_world['use_gradient']:
+      if len(wd.scalar_field.shape) > 2:
+        for t_idx in range(wd.scalar_field.shape[2]):
+          wd.scalar_field[:,:,t_idx] = gradient2d(wd.scalar_field[:,:,t_idx])
+          wd.current_u_field[:,:,t_idx] = gradient2d(wd.current_u_field[:,:,t_idx])
+          wd.current_v_field[:,:,t_idx] = gradient2d(wd.current_v_field[:,:,t_idx])
+      else:
+        wd.scalar_field = gradient2d(wd.scalar_field)
+
+    return wd
 
 
   @classmethod
@@ -819,7 +868,7 @@ class World(object):
     cell_x_size = wd_dict['cell_x_size']
     cell_y_size = wd_dict['cell_y_size']
     bounds = wd_dict['bounds']
-    
+
     print("Loaded World from File")
     return cls(sci_types, sci_fields, current_u_field, current_v_field, x_ticks, y_ticks, t_ticks, lon_ticks, lat_ticks, cell_x_size, cell_y_size, bounds)
 
