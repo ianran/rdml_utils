@@ -878,6 +878,9 @@ class World(object):
     if os.path.isfile(target_file):
       print( "%s Exists" % target_file )
       wd_dict = dd.io.load(target_file)
+    else:
+      print( "%s Does not exist" % target_file )
+      return None
 
     sci_types = wd_dict['science_fields'].keys()
     sci_fields = [wd_dict['science_fields'][sci_key] for sci_key in sci_types]
