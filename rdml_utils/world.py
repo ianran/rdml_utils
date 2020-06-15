@@ -306,8 +306,8 @@ class World(object):
     else:
       try:
         return self.science_fields[snapshot_type][:,:,snapshot_time_idx]
-      except ValueError:
-        raise ValueError("Unknown snapshot_type %s" % snapshot_type)
+      except KeyError:
+        raise KeyError("Unknown snapshot_type %s" % snapshot_type)
 
 
   def getUVcurrent(self, loc, t, loc_type='xy'):
