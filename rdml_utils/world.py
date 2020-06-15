@@ -375,7 +375,7 @@ class World(object):
       divider = make_axes_locatable(ax)
       cax = divider.append_axes("right", size="5%", pad=0.05)
       cbar = plt.colorbar(CS, format='%.1f', cax=cax)
-      cbar.set_label(self.science_variable_type)
+      cbar.set_label(science_type)
       ax.axis('scaled')
     elif loc_type == 'latlon':
       CS = plt.pcolor(self.lon_ticks, self.lat_ticks, masked_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
@@ -396,7 +396,7 @@ class World(object):
       divider = make_axes_locatable(ax)
       cax = divider.append_axes("right", size="5%", pad=0.05)
       cbar = plt.colorbar(CS, format='%.1f', cax=cax)
-      cbar.set_label(self.science_variable_type)
+      cbar.set_label(science_type)
       ax.axis('scaled')
     else:
       print "Unrecognized loc type"
