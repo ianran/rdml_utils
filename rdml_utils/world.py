@@ -293,8 +293,6 @@ class World(object):
     time_dist = [abs(ss_time - x) for x in self.t_ticks]#
     snapshot_time_idx = time_dist.index(min(time_dist))
 
-    if snapshot_type == 'scalar_field':
-      return self.scalar_fields[0][:,:,snapshot_time_idx]
 
     if snapshot_type == 'obstacle_field':
       return self.obstacle_field[:,:,snapshot_time_idx]
@@ -304,6 +302,13 @@ class World(object):
 
     elif snapshot_type == 'current_v_field':
       return self.current_v_field[:,:,snapshot_time_idx]
+
+    else:
+      try:
+        return self.scalar_fields[snapshot_type][:,:,snapshot_time_idx]
+      except ValueError:
+        raise ValueError("Unknown snapshot_type %s" % snapshot_type)
+
 
   def getUVcurrent(self, loc, t, loc_type='xy'):
     u_snapshot = self.getSnapshot(t, 'current_u_field')
@@ -326,16 +331,16 @@ class World(object):
     return LocDelta(d_xlon = float(current_u_current), d_ylat = float(current_v_current))
 
 
-  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black', loc_type='xy'):
+  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black', loc_type='xy', science_type='scalar_field'):
 
 
     if snapshot_time is None:
-      ss_scalar_field = self.getSnapshot(self.t_ticks[0], 'scalar_field')
+      ss_scalar_field = self.getSnapshot(self.t_ticks[0], science_type)
       ss_obstacle_field = self.getSnapshot(self.t_ticks[0], 'obstacle_field')
       ss_current_u_field = self.getSnapshot(self.t_ticks[0], 'current_u_field')
       ss_current_v_field = self.getSnapshot(self.t_ticks[0], 'current_v_field')
     else:
-      ss_scalar_field = self.getSnapshot(snapshot_time, 'scalar_field')
+      ss_scalar_field = self.getSnapshot(snapshot_time, science_type)
       ss_obstacle_field = self.getSnapshot(snapshot_time, 'obstacle_field')
       ss_current_u_field = self.getSnapshot(snapshot_time, 'current_u_field')
       ss_current_v_field = self.getSnapshot(snapshot_time, 'current_v_field')
