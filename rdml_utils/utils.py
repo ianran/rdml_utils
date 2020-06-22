@@ -855,6 +855,36 @@ def getFirstNDim(data, ndim):
   slc += [0] * (data.ndim - ndim)
   return data[tuple(slc)]
 
+def pathKM2M(path):
+
+  out_path = []
+
+  if isinstance(path, np.ndarray):
+    out_path = np.copy(path)
+    for i, loc in enumerate(path):
+      out_path[i] = loc * 1000.
+  else:
+    out_path = []
+    for loc in path:
+      out_path.append(Location(ylat=loc.y * 1000., xlon=loc.x * 1000.))
+
+  return out_path
+
+def pathM2KM(path):
+
+  out_path = []
+
+  if isinstance(path, np.ndarray):
+    out_path = np.copy(path)
+    for i, loc in enumerate(path):
+      out_path[i] = loc / 1000.
+  else:
+    out_path = []
+    for loc in path:
+      out_path.append(Location(ylat=loc.y / 1000., xlon=loc.x / 1000.))
+
+  return out_path
+
 if __name__ == '__main__':
   foo = np.random.random((11, 22, 33, 44, 55))
 
