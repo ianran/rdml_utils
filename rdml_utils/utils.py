@@ -855,6 +855,20 @@ def getFirstNDim(data, ndim):
   slc += [0] * (data.ndim - ndim)
   return data[tuple(slc)]
 
+
+def getPathLen(path):
+  if len(path) < 2: 
+    return 0.0
+  else:
+    res = 0.0
+    for p1, p2 in zip(path[:-1], path[1:]):
+      res += euclideanDist(p1, p2)
+    return res
+
+
+
+
+
 if __name__ == '__main__':
   foo = np.random.random((11, 22, 33, 44, 55))
 
