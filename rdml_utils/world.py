@@ -293,8 +293,6 @@ class World(object):
     time_dist = [abs(ss_time - x) for x in self.t_ticks]#
     snapshot_time_idx = time_dist.index(min(time_dist))
 
-    if snapshot_type == 'scalar_field':
-      return self.scalar_fields[0][:,:,snapshot_time_idx]
 
     if snapshot_type == 'obstacle_field':
       return self.obstacle_field[:,:,snapshot_time_idx]
@@ -304,6 +302,13 @@ class World(object):
 
     elif snapshot_type == 'current_v_field':
       return self.current_v_field[:,:,snapshot_time_idx]
+
+    else:
+      try:
+        return self.science_fields[snapshot_type][:,:,snapshot_time_idx]
+      except KeyError:
+        raise KeyError("Unknown snapshot_type %s" % snapshot_type)
+
 
   def getUVcurrent(self, loc, t, loc_type='xy'):
     u_snapshot = self.getSnapshot(t, 'current_u_field')
@@ -326,16 +331,16 @@ class World(object):
     return LocDelta(d_xlon = float(current_u_current), d_ylat = float(current_v_current))
 
 
-  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black'):
+  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black', loc_type='xy', science_type='scalar_field'):
 
 
     if snapshot_time is None:
-      ss_scalar_field = self.getSnapshot(self.t_ticks[0], 'scalar_field')
+      ss_scalar_field = self.getSnapshot(self.t_ticks[0], science_type)
       ss_obstacle_field = self.getSnapshot(self.t_ticks[0], 'obstacle_field')
       ss_current_u_field = self.getSnapshot(self.t_ticks[0], 'current_u_field')
       ss_current_v_field = self.getSnapshot(self.t_ticks[0], 'current_v_field')
     else:
-      ss_scalar_field = self.getSnapshot(snapshot_time, 'scalar_field')
+      ss_scalar_field = self.getSnapshot(snapshot_time, science_type)
       ss_obstacle_field = self.getSnapshot(snapshot_time, 'obstacle_field')
       ss_current_u_field = self.getSnapshot(snapshot_time, 'current_u_field')
       ss_current_v_field = self.getSnapshot(snapshot_time, 'current_v_field')
@@ -351,26 +356,50 @@ class World(object):
     num_format  = '%.0f'
     formatter = tick.FormatStrFormatter(num_format)
 
-    CS = plt.pcolor(self.x_ticks, self.y_ticks, masked_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
+    if loc_type == 'xy':
+      CS = plt.pcolor(self.x_ticks, self.y_ticks, masked_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
 
-    if draw_currents:
-      if quiver_stride is None:
-        quiver_stride = len(self.x_ticks) / 20
-      quiver = plt.quiver(self.x_ticks[::quiver_stride], self.y_ticks[::quiver_stride], ss_current_u_field.transpose()[::quiver_stride, ::quiver_stride], ss_current_v_field.transpose()[::quiver_stride, ::quiver_stride], color=quiver_color)
-      quiver_key = plt.quiverkey(quiver, 0.95, 1.05, 0.2, "0.2 m/s", labelpos='E', coordinates='axes')
+      if draw_currents:
+        if quiver_stride is None:
+          quiver_stride = len(self.x_ticks) / 20
+        quiver = plt.quiver(self.x_ticks[::quiver_stride], self.y_ticks[::quiver_stride], ss_current_u_field.transpose()[::quiver_stride, ::quiver_stride], ss_current_v_field.transpose()[::quiver_stride, ::quiver_stride], color=quiver_color)
+        quiver_key = plt.quiverkey(quiver, 0.95, 1.05, 0.2, "0.2 m/s", labelpos='E', coordinates='axes')
 
-    ax.get_xaxis().set_major_formatter(formatter)
-    ax.get_yaxis().set_major_formatter(formatter)
-    plt.ylim([np.min(self.x_ticks), np.max(self.x_ticks)])
-    plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)])
-    plt.title("Ground Truth World")
-    plt.xlabel("X (km)")
-    plt.ylabel("Y (km)")
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = plt.colorbar(CS, format='%.1f', cax=cax)
-    cbar.set_label(self.science_variable_type)
-    ax.axis('scaled')
+      ax.get_xaxis().set_major_formatter(formatter)
+      ax.get_yaxis().set_major_formatter(formatter)
+      plt.ylim([np.min(self.x_ticks), np.max(self.x_ticks)])
+      plt.xlim([np.min(self.y_ticks), np.max(self.y_ticks)])
+      plt.title("Ground Truth World")
+      plt.xlabel("X (km)")
+      plt.ylabel("Y (km)")
+      divider = make_axes_locatable(ax)
+      cax = divider.append_axes("right", size="5%", pad=0.05)
+      cbar = plt.colorbar(CS, format='%.1f', cax=cax)
+      cbar.set_label(science_type)
+      ax.axis('scaled')
+    elif loc_type == 'latlon':
+      CS = plt.pcolor(self.lon_ticks, self.lat_ticks, masked_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
+
+      if draw_currents:
+        if quiver_stride is None:
+          quiver_stride = len(self.lon_ticks) / 20
+        quiver = plt.quiver(self.lon_ticks[::quiver_stride], self.lat_ticks[::quiver_stride], ss_current_u_field.transpose()[::quiver_stride, ::quiver_stride], ss_current_v_field.transpose()[::quiver_stride, ::quiver_stride], color=quiver_color)
+        quiver_key = plt.quiverkey(quiver, 0.95, 1.05, 0.2, "0.2 m/s", labelpos='E', coordinates='axes')
+
+      ax.get_xaxis().set_major_formatter(formatter)
+      ax.get_yaxis().set_major_formatter(formatter)
+      plt.ylim([np.min(self.lon_ticks), np.max(self.lon_ticks)])
+      plt.xlim([np.min(self.lat_ticks), np.max(self.lat_ticks)])
+      plt.title("Ground Truth World")
+      plt.xlabel("X (lon)")
+      plt.ylabel("Y (lat)")
+      divider = make_axes_locatable(ax)
+      cax = divider.append_axes("right", size="5%", pad=0.05)
+      cbar = plt.colorbar(CS, format='%.1f', cax=cax)
+      cbar.set_label(science_type)
+      ax.axis('scaled')
+    else:
+      print "Unrecognized loc type"
 
     if show:
       plt.show(block)
@@ -849,6 +878,9 @@ class World(object):
     if os.path.isfile(target_file):
       print( "%s Exists" % target_file )
       wd_dict = dd.io.load(target_file)
+    else:
+      print( "%s Does not exist" % target_file )
+      return None
 
     sci_types = wd_dict['science_fields'].keys()
     sci_fields = [wd_dict['science_fields'][sci_key] for sci_key in sci_types]
