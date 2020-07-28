@@ -24,8 +24,6 @@ else:
     from rdml_utils.roms import getROMSData, reshapeROMS
 
 
-
-
 class World(object):
 
   """docstring for World"""
@@ -331,9 +329,7 @@ class World(object):
     return LocDelta(d_xlon = float(current_u_current), d_ylat = float(current_v_current))
 
 
-  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black', loc_type='xy', science_type='scalar_field'):
-
-
+  def draw(self, ax, block=True, show=False, cbar_max=None, cbar_min=None, quiver_stride=None, snapshot_time=None, draw_currents=True, cmap='Greys', quiver_color='black', loc_type='xy', science_type='scalar_field', num_format="%.0f"):
     if snapshot_time is None:
       ss_scalar_field = self.getSnapshot(self.t_ticks[0], science_type)
       ss_obstacle_field = self.getSnapshot(self.t_ticks[0], 'obstacle_field')
@@ -353,7 +349,7 @@ class World(object):
     if cbar_max is None:
       cbar_max = np.max(masked_field)
 
-    num_format  = '%.0f'
+    # num_format  = '%.0f'
     formatter = tick.FormatStrFormatter(num_format)
 
     if loc_type == 'xy':
@@ -377,6 +373,7 @@ class World(object):
       cbar = plt.colorbar(CS, format='%.1f', cax=cax)
       cbar.set_label(science_type)
       ax.axis('scaled')
+
     elif loc_type == 'latlon':
       CS = plt.pcolor(self.lon_ticks, self.lat_ticks, masked_field.transpose(), cmap=cmap, vmin=cbar_min, vmax=cbar_max)
 

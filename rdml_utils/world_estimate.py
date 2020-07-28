@@ -22,6 +22,10 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
+
+
+
 class WorldEstimate(object):
   """docstring for WorldEstimate"""
   def __init__(self, sci_type, snapshot_time, scalar_field, variance_estimate, current_u_field, current_v_field, x_ticks, y_ticks, env_resolution):
