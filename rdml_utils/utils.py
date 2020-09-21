@@ -41,7 +41,7 @@ class QueueSet(object):
     return len(self.queue_set)
 
   def __contains__(self, item):
-    return query in self.queue_set
+    return item in self.queue_set
 
   def qsize(self):
     return self.queue.qsize()
@@ -257,8 +257,11 @@ def floodFill(mat, label, pixel):
     floodFill(mat, label, n)
 
 
-def getNeighbors(loc, mat, step_size=1, connectivity=4):
+def getNeighbors(loc, obstacle_mat, step_size=1, connectivity=4):
   #Get List of Neighbors, Ignoring ones in obstacles or ones out of bounds
+  # Obstacle Mat 0 = is an obstacle
+  #              1 = is not an obstacle
+
   if connectivity == 4:
     translations = [[1, 0], [-1, 0], [0, 1], [0, -1]]
   elif connectivity == 8:
@@ -267,13 +270,18 @@ def getNeighbors(loc, mat, step_size=1, connectivity=4):
   neighbors = []
   for t in translations:
     query_loc = map(operator.add, loc, t)
-    if isFree(query_loc, mat):
+
+    if isFree(query_loc, obstacle_mat):
       neighbors.append(map(operator.add, loc, t))
+
   return map(tuple, neighbors)
 
 
 
 def isFree(loc, mat):
+  # Checks whether location index is within matrix bounds then checks to seee
+  # whether matrix value is free (1) or occupied (0)
+
   if loc[0] < 0 or loc[0] >= mat.shape[0]:
     return False
   elif loc[1] < 0 or loc[1] >= mat.shape[1]:
@@ -478,13 +486,16 @@ def locationLinspace(l1, l2, n):
 
   return [Location(xlon=x, ylat=y) for x, y in zip(xs, ys)]
 
-def locationArange(l1, l2, step_size):
+def locationArange(l1, l2, step_size, loc_type="latlon"):
   if l1 == l2:
     return [l1]
   elif step_size == 0:
     raise ValueError("Step Size should not be 0")
   else:
     unit_vec = (l2-l1).getUnit()*step_size
+    # xs, ys = np.mgrid[l1.x:l2.x:unit_vec.d_xlon, l1.y:l2.y:unit_vec.d_ylat]
+    # xs = xs[:,0]
+    # ys = ys[0, :]
 
     if unit_vec.d_xlon != 0:
       xs = np.arange(l1.x, l2.x, unit_vec.d_xlon)
@@ -498,6 +509,32 @@ def locationArange(l1, l2, step_size):
       ys = np.ones(xs.shape)*l1.y
 
     return [Location(xlon=x, ylat=y) for x, y in zip(xs, ys)]
+
+    # return [Location(xlon=pt[0], ylat=pt[1]) for pt in xy]
+
+def liteLocationArange(l1, l2, step_size):
+  if l1 == l2:
+    return [l1.asTuple()]
+  elif step_size == 0:
+    raise ValueError("Step Size should not be 0")
+  else:
+    unit_vec = (l2-l1).getUnit()*step_size
+    # xs, ys = np.mgrid[l1.x:l2.x:unit_vec.d_xlon, l1.y:l2.y:unit_vec.d_ylat]
+    # xs = xs[:,0]
+    # ys = ys[0, :]
+
+    if unit_vec.d_xlon != 0:
+      xs = np.arange(l1.x, l2.x, unit_vec.d_xlon)
+    if unit_vec.d_ylat != 0:
+      ys = np.arange(l1.y, l2.y, unit_vec.d_ylat)
+
+    if unit_vec.d_xlon == 0:
+      xs = np.ones(ys.shape)*l1.x
+
+    if unit_vec.d_ylat == 0:
+      ys = np.ones(xs.shape)*l1.y
+
+    return zip(xs, ys) #[(x, y) for x, y in zip(xs, ys)]
 
 def positivizePath(plan):
   for robot_plan in plan:
