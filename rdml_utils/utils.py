@@ -70,6 +70,13 @@ class QueueSet(object):
     return self.queue.empty()
 
 
+class StackSet(QueueSet):
+  """docstring for StackSet"""
+  def __init__(self):
+    QueueSet.__init__(self)
+    self.queue = Queue.LifoQueue()
+    
+
 class PriorityQueueSet(QueueSet):
   """docstring for PriorityQueueSet"""
   def __init__(self):
