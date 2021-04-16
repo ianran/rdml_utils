@@ -12,8 +12,32 @@ else:
 
 class Geofence(object):
   """docstring for Geofence"""
-  def __init__(self, pts):
+  def __init__(self, pts, fence_type="interior"):
     self.pts = pts
+
+
+    if fence_type == "interior":
+      self.interior_fence = True
+      # Interior fence contains valid points
+
+      # F F F F F F
+      # F 0 - - 0 F
+      # F | T T | F
+      # F 0 - - 0 F
+      # F F F F F F
+      
+
+    elif fence_type == "exterior":
+      self.interior_fence = False
+      # exterior fence excludes valid points
+
+      # T T T T T T
+      # T 0 - - 0 T
+      # T | F F | T
+      # T 0 - - 0 T
+      # T T T T T T
+
+
     vertices = np.array([[pt.lon, pt.lat] for pt in self.pts])
 
     hull = vertices[ConvexHull(vertices).vertices]
@@ -24,11 +48,11 @@ class Geofence(object):
     return "Geofence\n\t" + "\n\t".join(str(pt) for pt in self.pts)
 
   @classmethod
-  def fromPts(cls, pts):
-    return cls(pts)
+  def fromPts(cls, pts, fence_type="interior"):
+    return cls(pts, fence_type)
 
   @classmethod
-  def fromBounds(cls, bounds):
+  def fromBounds(cls, bounds, fence_type="interior"):
     if isinstance(bounds, dict):
       north_bound = bounds['north']
       south_bound = bounds['south']
@@ -43,10 +67,11 @@ class Geofence(object):
       print( "[GEOFENCE] Error: Could not parse vertices" )
 
     vertices = [Location(ylat=north_bound, xlon=east_bound), Location(ylat=north_bound, xlon=west_bound), Location(ylat=south_bound, xlon=west_bound), Location(ylat=south_bound, xlon=east_bound)]
-    return cls(vertices)
+    return cls(vertices, fence_type)
 
 
   def isValidPoint(self, pt):
+
     if isinstance(pt, Location):
       lat = pt.lat
       lon = pt.lon
@@ -64,8 +89,14 @@ class Geofence(object):
 
     if self.fence is None:
       return True
-    else:
+
+    elif self.interior_fence:
       return self.fence.contains_point([lon, lat])
+
+    elif not self.interior_fence:
+      return not self.fence.contains_point([lon, lat])
+
+
 
   def draw(self, ax, color):
     ax.plot([pt.x for pt in self.pts + [self.pts[0]]], [pt.y for pt in self.pts + [self.pts[0]]], c=color)
