@@ -217,6 +217,17 @@ class World(object):
       return True
 
 
+  def getClosestInBounds(self, query_loc, loc_type='xy'):
+    if self.withinBounds(query_loc, loc_type):
+      return query_loc
+    else:
+      if loc_type == 'xy':
+        res = Location(xlon = min(max(query_loc.x, self.x_ticks[0]), self.x_ticks[-1]),
+                       ylat = min(max(query_loc.y, self.y_ticks[0]), self.y_ticks[-1]))
+        return res
+      else:
+        return None # Can't do that currently.
+
   def makeObservations(self, query_locs, query_times, query_type='salinity', loc_type='xy'):
     query_times = [min(time, self.t_ticks[-1]) for time in query_times]
 
