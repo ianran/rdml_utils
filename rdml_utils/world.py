@@ -407,7 +407,7 @@ class World(object):
       cbar.set_label(science_type)
       ax.axis('scaled')
     else:
-      print "Unrecognized loc type"
+      print("Unrecognized loc type")
 
     if show:
       plt.show(block)

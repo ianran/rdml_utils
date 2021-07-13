@@ -75,7 +75,7 @@ class StackSet(QueueSet):
   def __init__(self):
     QueueSet.__init__(self)
     self.queue = Queue.LifoQueue()
-    
+
 
 class PriorityQueueSet(QueueSet):
   """docstring for PriorityQueueSet"""
@@ -276,12 +276,13 @@ def getNeighbors(loc, obstacle_mat, step_size=1, connectivity=4):
 
   neighbors = []
   for t in translations:
-    query_loc = map(operator.add, loc, t)
+    #query_loc = map(operator.add, loc, t)
+    query_loc = [loc[0]+t[0], loc[1]+t[1]]
 
     if isFree(query_loc, obstacle_mat):
-      neighbors.append(map(operator.add, loc, t))
+      neighbors.append(query_loc)
 
-  return map(tuple, neighbors)
+  return [tuple(neigh) for neigh in neighbors]#map(tuple, neighbors)
 
 
 
@@ -901,7 +902,7 @@ def getFirstNDim(data, ndim):
 
 
 def getPathLen(path):
-  if len(path) < 2: 
+  if len(path) < 2:
     return 0.0
   else:
     res = 0.0
