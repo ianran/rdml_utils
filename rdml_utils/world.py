@@ -949,7 +949,9 @@ def loadWorld(roms_file, world_center, world_width, world_height, world_resoluti
       # pdb.set_trace()
 
       # dd.io.save(world_file_full_path, wd, compression='zlib')
-      wd.saveH5(world_file_full_path)
+      
+      ###### Ian Removed this line of code
+      #wd.saveH5(world_file_full_path)
       print( "World saved to %s" % world_file_full_path )
 
 
